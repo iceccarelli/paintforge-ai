@@ -24,7 +24,7 @@ export default function PaintForgeHomepage() {
             IN DEVELOPMENT • GTA PILOT PROGRAM • 2026
           </div>
 
-          <h1 className="text-6xl md:text-7xl font-semibold tracking-[-0.05em] leading-[1.05] mb-6">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold tracking-[-0.05em] leading-[1.05] mb-6">
             Robotic Painting,
             <br />
             Built for Contractors
@@ -32,7 +32,7 @@ export default function PaintForgeHomepage() {
             Who Finish First.
           </h1>
 
-          <p className="max-w-3xl mx-auto text-2xl text-white/80 tracking-tight mb-10">
+          <p className="max-w-3xl mx-auto text-lg sm:text-xl md:text-2xl text-white/80 tracking-tight mb-10">
             PaintForge is an autonomous wall-and-ceiling painting platform in
             development, engineered to multiply crew output with closed-loop
             coating consistency. We are recruiting a small group of GTA design
@@ -59,7 +59,7 @@ export default function PaintForgeHomepage() {
           </p>
         </div>
 
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[900px] h-[2px] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[900px] h-[2px] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
       </section>
 
       {/* ENGINEERING TARGETS BAR */}
@@ -238,7 +238,7 @@ export default function PaintForgeHomepage() {
             <div className="text-[#FF6B35] text-sm font-semibold tracking-[2px] mb-3">
               2026 PILOT PROGRAM
             </div>
-            <h2 className="text-4xl font-semibold tracking-tight">
+            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">
               We are looking for a handful of
               <br />
               GTA contractors to build this with.
@@ -376,12 +376,12 @@ export default function PaintForgeHomepage() {
       {/* FINAL CTA */}
       <section className="bg-[#0A2540] py-20 text-white text-center">
         <div className="max-w-3xl mx-auto px-6">
-          <h2 className="text-5xl font-semibold tracking-[-0.04em] leading-none mb-6">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-[-0.04em] leading-tight mb-6">
             Help define how
             <br />
             interiors get painted.
           </h2>
-          <p className="text-2xl text-white/70 mb-9">
+          <p className="text-lg sm:text-xl md:text-2xl text-white/70 mb-9">
             The 2026 pilot cohort is small by design. If painter shortages are
             costing you schedule or margin, talk to us.
           </p>

@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircle, X, Send, Bot } from 'lucide-react';
+import { X, Send, Bot } from 'lucide-react';
 
 interface Message {
   id: number;
@@ -122,10 +122,17 @@ export function Chatbot() {
       {/* Floating Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-8 right-8 z-[60] w-14 h-14 rounded-full bg-[#0A2540] text-white flex items-center justify-center shadow-2xl hover:bg-[#FF6B35] transition-all active:scale-95"
+        className={`fixed bottom-5 right-5 sm:bottom-8 sm:right-8 z-[60] w-14 h-14 rounded-full bg-[#0A2540] text-white flex items-center justify-center shadow-2xl hover:bg-[#FF6B35] transition-all active:scale-95 ${!isOpen ? 'chat-launcher-breathe' : ''}`}
         aria-label="Open PaintForge Assistant"
       >
-        {isOpen ? <X size={22} /> : <MessageCircle size={22} />}
+        {/* Soothing expanding pulse rings — hidden while the panel is open */}
+        {!isOpen && (
+          <>
+            <span className="chat-launcher-ring absolute inset-0 rounded-full bg-[#FF6B35]" />
+            <span className="chat-launcher-ring chat-launcher-ring-delayed absolute inset-0 rounded-full bg-[#FF6B35]" />
+          </>
+        )}
+        <span className="relative">{isOpen ? <X size={22} /> : <Bot size={24} />}</span>
       </button>
 
       {/* Chat Panel */}
@@ -136,7 +143,7 @@ export function Chatbot() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.98 }}
             transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
-            className="fixed bottom-24 right-8 z-[70] w-[380px] h-[560px] bg-white rounded-3xl border border-[#E2E8F0] shadow-2xl flex flex-col overflow-hidden chatbot-panel"
+            className="fixed bottom-[5.5rem] right-4 sm:bottom-24 sm:right-8 z-[70] w-[calc(100vw-2rem)] max-w-[380px] h-[min(560px,calc(100dvh-7.5rem))] bg-white rounded-3xl border border-[#E2E8F0] shadow-2xl flex flex-col overflow-hidden chatbot-panel"
           >
             {/* Header */}
             <div className="bg-[#0A2540] text-white px-5 py-4 flex items-center justify-between">
@@ -215,7 +222,7 @@ export function Chatbot() {
               </button>
             </div>
 
-            <div className="text-center text-[10px] text-[#94A3B8] pb-3">This is a demo assistant. Real responses from our team in &lt; 2 min during business hours.</div>
+            <div className="text-center text-[10px] text-[#94A3B8] pb-3">Scripted demo assistant. For real answers, apply via the pilot form \u2014 we reply by email.</div>
           </motion.div>
         )}
       </AnimatePresence>

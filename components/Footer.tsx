@@ -86,7 +86,7 @@ export function Footer() {
     <footer className="bg-[#0A2540] text-white/90 pt-16 pb-8">
       <div className="max-w-7xl mx-auto px-6">
         {/* Column grid (AWS pattern) */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-y-10 gap-x-6 pb-10">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-y-10 gap-x-6 pb-10">
           {columns.map((col) => (
             <div key={col.title}>
               <div className="font-semibold text-white mb-4 tracking-tight">

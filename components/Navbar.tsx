@@ -22,14 +22,14 @@ export function Navbar() {
     <header className="sticky top-0 z-50">
       {/* Tier 1 — dark utility bar (AWS pattern) */}
       <div className="utility-bar bg-[#0A2540] text-white/85 text-[13px]">
-        <div className="max-w-7xl mx-auto px-6 h-9 flex items-center justify-end gap-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-9 flex items-center justify-end gap-4 sm:gap-6">
           <a
             href={`mailto:${CONTACT_EMAIL}`}
             className="hidden sm:flex items-center gap-1.5 hover:text-white transition-colors"
           >
             <Mail size={13} /> Contact us
           </a>
-          <Link href="/dashboard" className="hover:text-white transition-colors">
+          <Link href="/dashboard" className="hidden sm:inline hover:text-white transition-colors">
             Product Preview
           </Link>
           <Link

@@ -89,12 +89,12 @@ export default function PricingPage() {
               </div>
               <div className="mt-6">
                 {plan.price === "Custom" ? (
-                  <div className="text-5xl font-semibold tracking-tighter">
+                  <div className="text-4xl md:text-5xl font-semibold tracking-tighter">
                     Custom
                   </div>
                 ) : (
                   <div>
-                    <span className="text-5xl font-semibold tabular-nums tracking-[-2px]">
+                    <span className="text-4xl md:text-5xl font-semibold tabular-nums tracking-[-2px]">
                       ${plan.price}
                     </span>
                     <span className="text-[#64748B]">/mo target</span>
@@ -128,7 +128,7 @@ export default function PricingPage() {
           <div className="uppercase tracking-[2px] text-xs text-[#FF6B35] mb-2">
             ROADMAP
           </div>
-          <h3 className="text-4xl font-semibold tracking-tight">
+          <h3 className="text-3xl md:text-4xl font-semibold tracking-tight">
             One base, multiple trades
           </h3>
           <p className="mt-4 text-lg text-white/80">
