@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {
   Mail,
+  ArrowUp,
   Linkedin,
   Twitter,
   Youtube,
@@ -12,25 +13,71 @@ import {
   MessageSquare,
 } from "lucide-react";
 
-// ---------------------------------------------------------------------------
-// SOCIAL LINKS — fill in each `href` when the account exists.
-// Leave `href: ""` until then: the icon renders as a muted placeholder
-// (not a clickable dead link). The moment you paste a URL it goes live.
-// ---------------------------------------------------------------------------
-const socialLinks = [
-  { icon: Linkedin, href: "", label: "LinkedIn" }, // TODO: https://linkedin.com/company/...
-  { icon: Twitter, href: "", label: "X (Twitter)" }, // TODO: https://x.com/...
-  { icon: Youtube, href: "", label: "YouTube" }, // TODO: https://youtube.com/@...
-  { icon: Instagram, href: "", label: "Instagram" }, // TODO: https://instagram.com/...
-  { icon: Facebook, href: "", label: "Facebook" }, // TODO: https://facebook.com/...
-  { icon: Music2, href: "", label: "TikTok" }, // TODO: https://tiktok.com/@...
-  { icon: MessageCircle, href: "", label: "Discord" }, // TODO: https://discord.gg/...
-  { icon: Github, href: "", label: "GitHub" }, // TODO: https://github.com/...
-  { icon: MessageSquare, href: "", label: "Reddit" }, // TODO: https://reddit.com/r/...
-];
-
 const CONTACT_EMAIL =
   process.env.NEXT_PUBLIC_CONTACT_EMAIL || "vince.ceccarelli@gmail.com";
+
+// ---------------------------------------------------------------------------
+// SOCIAL LINKS — clickable now. Each href points at the platform itself until
+// the PaintForge account exists; when it does, replace the href with the
+// profile URL (formats in the comments). Nothing else needs to change.
+// ---------------------------------------------------------------------------
+const socialLinks = [
+  { icon: Linkedin, href: "https://www.linkedin.com", label: "LinkedIn" }, // → https://linkedin.com/company/paintforge
+  { icon: Twitter, href: "https://x.com", label: "X (Twitter)" }, // → https://x.com/paintforge
+  { icon: Youtube, href: "https://www.youtube.com", label: "YouTube" }, // → https://youtube.com/@paintforge
+  { icon: Instagram, href: "https://www.instagram.com", label: "Instagram" }, // → https://instagram.com/paintforge
+  { icon: Facebook, href: "https://www.facebook.com", label: "Facebook" }, // → https://facebook.com/paintforge
+  { icon: Music2, href: "https://www.tiktok.com", label: "TikTok" }, // → https://tiktok.com/@paintforge
+  { icon: MessageCircle, href: "https://discord.com", label: "Discord" }, // → https://discord.gg/<invite>
+  { icon: Github, href: "https://github.com", label: "GitHub" }, // → https://github.com/paintforge
+  { icon: MessageSquare, href: "https://www.reddit.com", label: "Reddit" }, // → https://reddit.com/r/paintforge
+];
+
+const columns: { title: string; links: { href: string; label: string }[] }[] = [
+  {
+    title: "Learn",
+    links: [
+      { href: "/#features", label: "What Is PaintForge?" },
+      { href: "/#how-it-works", label: "How It Works" },
+      { href: "/resources#targets", label: "Engineering Targets" },
+      { href: "/resources#methodology", label: "ROI Methodology" },
+      { href: "/resources#case-studies", label: "Case Studies" },
+    ],
+  },
+  {
+    title: "Product",
+    links: [
+      { href: "/#roi-calculator", label: "ROI Model" },
+      { href: "/pricing", label: "Planned RaaS Pricing" },
+      { href: "/dashboard", label: "Product Preview" },
+      { href: "/#technology", label: "Technology Stack" },
+    ],
+  },
+  {
+    title: "Solutions",
+    links: [
+      { href: "/solutions", label: "General Contractors" },
+      { href: "/solutions", label: "Painting Subcontractors" },
+      { href: "/solutions", label: "GTA Housing & Condos" },
+      { href: "/solutions", label: "Enterprise & Institutional" },
+    ],
+  },
+  {
+    title: "Company",
+    links: [
+      { href: "/#talk-to-expert", label: "2026 Pilot Program" },
+      { href: "/resources", label: "Resources" },
+      { href: `mailto:${CONTACT_EMAIL}`, label: "Contact Us" },
+    ],
+  },
+  {
+    title: "Legal",
+    links: [
+      { href: "/legal/privacy", label: "Privacy Policy" },
+      { href: "/legal/terms", label: "Terms of Use" },
+    ],
+  },
+];
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -38,158 +85,85 @@ export function Footer() {
   return (
     <footer className="bg-[#0A2540] text-white/90 pt-16 pb-8">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-y-10 pb-12 border-b border-white/10">
-          {/* Product */}
-          <div>
-            <div className="font-semibold text-white mb-4 tracking-tight">
-              Product
+        {/* Column grid (AWS pattern) */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-y-10 gap-x-6 pb-10">
+          {columns.map((col) => (
+            <div key={col.title}>
+              <div className="font-semibold text-white mb-4 tracking-tight">
+                {col.title}
+              </div>
+              <ul className="space-y-2.5 text-sm">
+                {col.links.map((l) => (
+                  <li key={l.label}>
+                    <Link
+                      href={l.href}
+                      className="text-white/65 hover:text-white transition"
+                    >
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
-            <ul className="space-y-2.5 text-sm">
-              <li>
-                <Link href="/#features" className="hover:text-white transition">
-                  Features
-                </Link>
-              </li>
-              <li>
-                <Link href="/#how-it-works" className="hover:text-white transition">
-                  How it Works
-                </Link>
-              </li>
-              <li>
-                <Link href="/#roi-calculator" className="hover:text-white transition">
-                  ROI Model
-                </Link>
-              </li>
-              <li>
-                <Link href="/pricing" className="hover:text-white transition">
-                  Planned Pricing
-                </Link>
-              </li>
-              <li>
-                <Link href="/dashboard" className="hover:text-white transition">
-                  Product Preview
-                </Link>
-              </li>
-            </ul>
+          ))}
+        </div>
+
+        {/* Back to top (AWS pattern) */}
+        <div className="border-y border-white/10 py-4 text-center">
+          <a
+            href="#top"
+            className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-white transition"
+          >
+            Back to top <ArrowUp size={14} />
+          </a>
+        </div>
+
+        {/* Bottom bar: statement + socials (AWS pattern) */}
+        <div className="pt-8 flex flex-col md:flex-row md:items-start justify-between gap-6 text-sm">
+          <div className="text-white/60 max-w-2xl leading-relaxed">
+            PaintForge is a pre-launch robotics venture building autonomous
+            painting systems for Ontario contractors. All performance figures
+            on this site are engineering targets pending validation in 2026
+            pilot deployments.
           </div>
 
-          {/* Solutions */}
-          <div>
-            <div className="font-semibold text-white mb-4 tracking-tight">
-              Solutions
-            </div>
-            <ul className="space-y-2.5 text-sm">
-              <li>
-                <Link href="/solutions" className="hover:text-white transition">
-                  For General Contractors
-                </Link>
-              </li>
-              <li>
-                <Link href="/solutions" className="hover:text-white transition">
-                  Painting Subcontractors
-                </Link>
-              </li>
-              <li>
-                <Link href="/solutions" className="hover:text-white transition">
-                  GTA Housing &amp; Condos
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Company */}
-          <div>
-            <div className="font-semibold text-white mb-4 tracking-tight">
-              Company
-            </div>
-            <ul className="space-y-2.5 text-sm">
-              <li>
-                <Link href="/resources" className="hover:text-white transition">
-                  Resources &amp; Methodology
-                </Link>
-              </li>
-              <li>
-                <Link href="/#talk-to-expert" className="hover:text-white transition">
-                  Pilot Program
-                </Link>
-              </li>
-              <li>
+          {/* 9 social icons — clickable, platform-level until profiles exist */}
+          <div className="flex items-center gap-4 flex-shrink-0">
+            {socialLinks.map((social) => {
+              const Icon = social.icon;
+              return (
                 <a
-                  href={`mailto:${CONTACT_EMAIL}`}
-                  className="hover:text-white transition"
+                  key={social.label}
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white/60 hover:text-white transition-colors hover:scale-110"
+                  aria-label={social.label}
                 >
-                  Contact
+                  <Icon size={18} />
                 </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Legal */}
-          <div>
-            <div className="font-semibold text-white mb-4 tracking-tight">
-              Legal
-            </div>
-            <ul className="space-y-2.5 text-sm">
-              <li>
-                <Link href="/legal/privacy" className="hover:text-white transition">
-                  Privacy Policy
-                </Link>
-              </li>
-              <li>
-                <Link href="/legal/terms" className="hover:text-white transition">
-                  Terms of Use
-                </Link>
-              </li>
-            </ul>
+              );
+            })}
           </div>
         </div>
 
-        {/* Bottom bar */}
-        <div className="pt-8 flex flex-col md:flex-row md:items-center justify-between gap-6 text-sm">
-          <div className="text-white/60">
-            © {currentYear} PaintForge. Toronto, Ontario, Canada.
-            <span className="hidden md:inline">
-              {" "}
-              · A pre-launch robotics venture — pilot deployments planned for
-              2026.
-            </span>
-          </div>
-
-          <div className="flex flex-col sm:flex-row sm:items-center gap-5">
-            {/* 9 social icons — live links once hrefs are filled in above */}
-            <div className="flex items-center gap-5">
-              {socialLinks.map((social) => {
-                const Icon = social.icon;
-                return social.href ? (
-                  <a
-                    key={social.label}
-                    href={social.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-white/60 hover:text-white transition-colors hover:scale-110"
-                    aria-label={social.label}
-                  >
-                    <Icon size={18} />
-                  </a>
-                ) : (
-                  <span
-                    key={social.label}
-                    className="text-white/25 cursor-default"
-                    aria-label={`${social.label} (coming soon)`}
-                    title={`${social.label} — coming soon`}
-                  >
-                    <Icon size={18} />
-                  </span>
-                );
-              })}
-            </div>
-
-            <a
-              href={`mailto:${CONTACT_EMAIL}`}
-              className="flex items-center gap-2 text-white/60 hover:text-white transition-colors"
-            >
-              <Mail size={16} /> {CONTACT_EMAIL}
-            </a>
+        {/* Legal line (AWS pattern) */}
+        <div className="pt-6 flex flex-col md:flex-row md:items-center gap-x-8 gap-y-2 text-[13px] text-white/50">
+          <Link href="/legal/privacy" className="hover:text-white transition">
+            Privacy
+          </Link>
+          <Link href="/legal/terms" className="hover:text-white transition">
+            Terms
+          </Link>
+          <a
+            href={`mailto:${CONTACT_EMAIL}`}
+            className="hover:text-white transition inline-flex items-center gap-1.5"
+          >
+            <Mail size={13} /> {CONTACT_EMAIL}
+          </a>
+          <div className="md:ml-auto">
+            © {currentYear} PaintForge. Toronto, Ontario, Canada. All rights
+            reserved.
           </div>
         </div>
       </div>

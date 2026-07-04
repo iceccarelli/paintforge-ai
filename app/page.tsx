@@ -11,13 +11,15 @@ import {
 } from "lucide-react";
 import { ROICalculator } from "@/components/ROICalculator";
 import { ContactForm } from "@/components/ContactForm";
+import { HeroReel } from "@/components/HeroReel";
 
 export default function PaintForgeHomepage() {
   return (
     <div className="overflow-hidden">
-      {/* HERO */}
-      <section className="relative pt-16 pb-20 bg-[#0A2540] text-white">
-        <div className="max-w-5xl mx-auto px-6 text-center">
+      {/* HERO — Ken Burns image reel behind, randomized per visit */}
+      <section id="top" className="relative pt-20 pb-24 bg-[#0A2540] text-white">
+        <HeroReel />
+        <div className="relative max-w-5xl mx-auto px-6 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-white/10 text-xs tracking-[2px] font-medium mb-6">
             IN DEVELOPMENT • GTA PILOT PROGRAM • 2026
           </div>

@@ -310,3 +310,43 @@ button, a {
 button:active, a:active {
   transform: scale(0.985);
 }
+
+/* ---------------------------------------------------------------------------
+   Ken Burns hero reel — 4 motion variants assigned by slide index
+   --------------------------------------------------------------------------- */
+.kb {
+  will-change: transform;
+  animation-duration: 11s;
+  animation-timing-function: ease-in-out;
+  animation-fill-mode: both;
+  animation-iteration-count: 1;
+}
+.kb-0 { animation-name: kbZoomInTL; }
+.kb-1 { animation-name: kbZoomOutBR; }
+.kb-2 { animation-name: kbPanRight; }
+.kb-3 { animation-name: kbPanUp; }
+
+@keyframes kbZoomInTL {
+  from { transform: scale(1) translate(0, 0); }
+  to   { transform: scale(1.14) translate(-2.5%, -2%); }
+}
+@keyframes kbZoomOutBR {
+  from { transform: scale(1.14) translate(2.5%, 2%); }
+  to   { transform: scale(1) translate(0, 0); }
+}
+@keyframes kbPanRight {
+  from { transform: scale(1.1) translate(-3%, 0); }
+  to   { transform: scale(1.1) translate(3%, 0); }
+}
+@keyframes kbPanUp {
+  from { transform: scale(1.1) translate(0, 2.5%); }
+  to   { transform: scale(1.12) translate(0, -2.5%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kb { animation: none; }
+}
+
+/* AWS-pattern header utility bar */
+.utility-bar a { color: rgba(255, 255, 255, 0.85); }
+.utility-bar a:hover { color: #ffffff; }
