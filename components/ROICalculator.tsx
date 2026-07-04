@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Calculator, TrendingUp, Clock, DollarSign, Users, Zap } from 'lucide-react';
+import { Calculator, TrendingUp, Clock, Users, Zap } from 'lucide-react';
 
 interface ROIResults {
   robotsNeeded: number;
@@ -97,6 +96,8 @@ export function ROICalculator() {
       calculateROI();
     }, 120);
     return () => clearTimeout(timer);
+    // calculateROI reads exactly these inputs; re-run when any changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sqft, crewSize, dailyCost, coats, targetDays, bundleWithDryforge]);
 
   const formatCurrency = (amount: number) => 
@@ -109,8 +110,8 @@ export function ROICalculator() {
           <Calculator className="w-6 h-6" />
         </div>
         <div>
-          <h3 className="text-2xl font-semibold tracking-tight">Interactive ROI Calculator</h3>
-          <p className="text-[#475569]">See exactly how much PaintForge will save your next project. Adjust inputs live.</p>
+          <h3 className="text-2xl font-semibold tracking-tight">Interactive ROI Model</h3>
+          <p className="text-[#475569]">Model the potential impact for your project. All outputs are estimates based on engineering targets.</p>
         </div>
       </div>
 
@@ -178,7 +179,7 @@ export function ROICalculator() {
               className="w-4 h-4 accent-[#FF6B35]"
             />
             <label htmlFor="bundle" className="text-sm font-medium cursor-pointer">
-              Bundle with DryForge (save extra 18% + shared operators)
+              Model planned platform bundle discount (18% \u2014 roadmap pricing)
             </label>
           </div>
         </div>
@@ -186,7 +187,7 @@ export function ROICalculator() {
         {/* Results - Live updating */}
         <div className="lg:col-span-3">
           <div className="bg-[#F8FAFC] rounded-2xl p-7 border border-[#E2E8F0]">
-            <div className="uppercase text-xs tracking-[1.5px] font-semibold text-[#FF6B35] mb-4">PROJECTED IMPACT FOR YOUR NUMBERS</div>
+            <div className="uppercase text-xs tracking-[1.5px] font-semibold text-[#FF6B35] mb-4">MODELED IMPACT FOR YOUR NUMBERS</div>
             
             <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
               {/* Robots Needed */}
@@ -248,7 +249,7 @@ export function ROICalculator() {
             </div>
 
             <div className="mt-6 pt-5 border-t text-xs text-[#475569] flex items-center justify-between">
-              <div>Based on Ontario 2025-2026 labor rates &amp; 1,200+ PaintForge deployments.</div>
+              <div>Modeled estimate: published Ontario 2025\u20132026 labor rates + PaintForge engineering targets. Not measured field results.</div>
               <button 
                 onClick={() => window.location.href = '/pricing'}
                 className="text-[#FF6B35] font-semibold hover:underline flex items-center gap-1"

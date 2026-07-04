@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircle, X, Send, Bot, User, ArrowRight } from 'lucide-react';
+import { MessageCircle, X, Send, Bot } from 'lucide-react';
 
 interface Message {
   id: number;
@@ -12,21 +12,27 @@ interface Message {
 }
 
 const quickReplies = [
-  "Show RaaS pricing",
-  "How does bundling with DryForge work?",
-  "Spray path optimization explained",
-  "ROI for 80,000 sqft commercial project",
-  "Edge cutting & masking process",
-  "Book a live demo with sales",
+  "What is PaintForge?",
+  "Show planned RaaS pricing",
+  "How does the pilot program work?",
+  "What are the engineering targets?",
+  "How does the ROI model work?",
+  "How do I apply?",
 ];
 
 const botResponses: Record<string, string> = {
-  "Show RaaS pricing": "Our RaaS starts at $4,900/robot/month for the Launch tier (1 robot). Scale tier (3 robots) is $13,900/mo. Enterprise is custom. Bundling with DryForge saves you an additional 18% on both subscriptions + unified fleet management. Want me to open the full pricing page?",
-  "How does bundling with DryForge work?": "You get one shared mobile base platform. Swap the painting end-effector for the drywall sander in under 15 minutes. Same InteriorFinish OS dashboard, same operators trained on both, one contract, and 18% discount on the combined monthly RaaS. Most GTA contractors running both finish full interiors 4–6 weeks faster.",
-  "Spray path optimization explained": "Our vision system (4K + depth) scans the room in ~25 minutes and builds a precise digital twin. The AI then generates optimal spray paths that maximize coverage while minimizing overspray by up to 87%. It accounts for corners, reveals, HVAC, and even suggests back-roll passes for texture matching. You approve the plan in the app before the robot starts.",
-  "ROI for 80,000 sqft commercial project": "For an 80k sqft, 3-coat commercial job with an 8-painter crew, our calculator shows you'd need ~3 robots, cut the timeline from ~42 days to 18 days, and save approximately $162k in direct labor while paying back the fleet in under 5 months. Toggle the bundling option for even better numbers.",
-  "Edge cutting & masking process": "The robot uses a servo gun for precise edge work and has an optional secondary roller arm for back-rolling. Masking is still done by your crew (or we can quote automated masking add-on). The robot handles 92% of the flat field spraying autonomously with perfect mil consistency (±2 mil).",
-  "Book a live demo with sales": "Perfect. I'll connect you with our Ontario deployment team. What's the best email and a good time this week? (Or click 'Talk to an Expert' in the header for the full form.)",
+  "What is PaintForge?":
+    "PaintForge is an autonomous wall-and-ceiling painting platform currently in development. We're engineering a mobile robot with an airless spray kit and closed-loop thickness control, and recruiting GTA contractors as design partners for 2026 pilot deployments. No units are in the field yet \u2014 that's what the pilot program is for.",
+  "Show planned RaaS pricing":
+    "Planned Robot-as-a-Service pricing: Launch tier targets $4,900/robot/month, Scale tier (3 robots) targets $13,900/month, Enterprise is custom. These are target prices for pilot and early production units \u2014 founding design partners lock in preferred rates. Full details on the Pricing page.",
+  "How does the pilot program work?":
+    "We're selecting a small cohort of GTA contractors for 2026 pilots. Design partners get first access to pilot units, preferred pricing locked in, and direct input into the product. In return, we ask for real job-site access and structured feedback. Apply via the form on the homepage.",
+  "What are the engineering targets?":
+    "Design targets for pilot units: roughly 4\u00d7 the output of a manual crew, \u00b12 mil coating thickness tolerance via closed-loop control, and 1,000+ sqft per coat per day per robot. These are engineering targets, not measured field results \u2014 pilots exist to validate them.",
+  "How does the ROI model work?":
+    "The calculator on the homepage models your project using published Ontario labor rates and our engineering targets. It estimates fleet size, timeline compression, and labor savings. Every number is a modeled estimate \u2014 the methodology and assumptions are documented on the Resources page.",
+  "How do I apply?":
+    "Use the 'Apply as a Design Partner' form on the homepage \u2014 tell us about your upcoming projects (sqft, timelines, current painting challenges). We reply to every serious inquiry by email, typically within 1\u20132 business days.",
 };
 
 export function Chatbot() {
@@ -35,13 +41,17 @@ export function Chatbot() {
     {
       id: 1,
       type: 'bot',
-      text: "Hi, I'm the PaintForge Assistant. I know everything about robotic painting, RaaS pricing, DryForge bundling, and GTA project deployments. How can I help you today?",
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      text: "Hi, I'm the PaintForge assistant. I can explain what we're building, our 2026 GTA pilot program, planned pricing, and how the ROI model works. What would you like to know?",
+      time: '',
     },
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const nextId = useRef(2);
+
+  const timeNow = () =>
+    new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -53,10 +63,10 @@ export function Chatbot() {
 
   const addMessage = (text: string, type: 'bot' | 'user') => {
     const newMessage: Message = {
-      id: Date.now(),
+      id: nextId.current++,
       type,
       text,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      time: timeNow(),
     };
     setMessages(prev => [...prev, newMessage]);
   };
@@ -74,24 +84,22 @@ export function Chatbot() {
     setTimeout(() => {
       setIsTyping(false);
       
-      let response = "Thanks for your question. Our team would be happy to dive deeper into that. Would you like me to connect you with a PaintForge deployment specialist in the GTA?";
-      
-      // Smart matching
+      let response = "Good question — I don't have a scripted answer for that. The best next step is the pilot application form on the homepage; a real person reads every inquiry and will reply by email.";
+
+      // Keyword matching against scripted answers
       const lowerText = messageText.toLowerCase();
       if (lowerText.includes('price') || lowerText.includes('cost') || lowerText.includes('raas')) {
-        response = botResponses["Show RaaS pricing"];
-      } else if (lowerText.includes('bundle') || lowerText.includes('dryforge')) {
-        response = botResponses["How does bundling with DryForge work?"];
-      } else if (lowerText.includes('spray path') || lowerText.includes('optimization') || lowerText.includes('ai path')) {
-        response = botResponses["Spray path optimization explained"];
-      } else if (lowerText.includes('roi') || lowerText.includes('80,000') || lowerText.includes('savings')) {
-        response = botResponses["ROI for 80,000 sqft commercial project"];
-      } else if (lowerText.includes('edge') || lowerText.includes('mask') || lowerText.includes('detail')) {
-        response = botResponses["Edge cutting & masking process"];
-      } else if (lowerText.includes('demo') || lowerText.includes('book') || lowerText.includes('talk')) {
-        response = botResponses["Book a live demo with sales"];
-      } else if (lowerText.includes('how many') || lowerText.includes('robots needed')) {
-        response = "It depends on your sqft and timeline. Use the interactive ROI calculator on this page — it will instantly recommend the optimal fleet size and show your exact payback period.";
+        response = botResponses["Show planned RaaS pricing"];
+      } else if (lowerText.includes('pilot') || lowerText.includes('partner') || lowerText.includes('program')) {
+        response = botResponses["How does the pilot program work?"];
+      } else if (lowerText.includes('target') || lowerText.includes('spec') || lowerText.includes('speed') || lowerText.includes('mil')) {
+        response = botResponses["What are the engineering targets?"];
+      } else if (lowerText.includes('roi') || lowerText.includes('savings') || lowerText.includes('calculator')) {
+        response = botResponses["How does the ROI model work?"];
+      } else if (lowerText.includes('apply') || lowerText.includes('demo') || lowerText.includes('book') || lowerText.includes('talk') || lowerText.includes('contact')) {
+        response = botResponses["How do I apply?"];
+      } else if (lowerText.includes('what is') || lowerText.includes('who are') || lowerText.includes('about')) {
+        response = botResponses["What is PaintForge?"];
       }
 
       addMessage(response, 'bot');

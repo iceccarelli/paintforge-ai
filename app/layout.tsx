@@ -1,68 +1,50 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
 import "./globals.css";
-import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Chatbot } from "@/components/Chatbot";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
-});
-
 export const metadata: Metadata = {
-  title: "PaintForge | Precision Robotic Painting Platform | 4× Faster Wall & Ceiling Painting",
-  description: "Deploy autonomous robots that paint walls and ceilings at 4× human speed with perfect mil consistency. Same mobile base as DryForge. Finish GTA projects weeks earlier. RaaS pricing from $4,900/mo.",
-  icons: {
-    icon: "/favicon.ico",
-  },
+  metadataBase: new URL("https://paintforge-app.vercel.app"),
+  title: "PaintForge | Robotic Painting for GTA Contractors | 2026 Pilot Program",
+  description:
+    "PaintForge is building autonomous painting robots for walls and ceilings, targeting 4× crew output with closed-loop mil consistency. Now recruiting GTA design partners for 2026 pilot deployments.",
+  icons: { icon: "/favicon.ico" },
   openGraph: {
-    title: "PaintForge | The Precision Robotic Painting Platform",
-    description: "Stop fighting painter shortages. Deploy robotic precision today. Shared platform with DryForge for full interior finishing.",
-    images: [{ url: "/og-image.png" }],
+    title: "PaintForge | Robotic Painting — 2026 GTA Pilot Program",
+    description:
+      "Autonomous painting robots in development for Ontario contractors. Apply to become a design partner.",
   },
   keywords: [
     "robotic painting",
     "construction automation",
     "GTA contractors",
     "robotic painter Ontario",
-    "DryForge integration",
     "RaaS painting robot",
     "interior finishing robot",
     "airless spray robot",
+    "construction robotics pilot",
   ],
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
-    <ClerkProvider
-      publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || "pk_test_placeholder"}
+    <html
+      lang="en"
+      className={`${GeistSans.variable} ${GeistMono.variable} h-full antialiased`}
     >
-      <html
-        lang="en"
-        className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-      >
-        <body className="min-h-full flex flex-col bg-white text-[#0A2540]">
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <Footer />
-          <Chatbot />
-          <Toaster position="top-center" richColors closeButton />
-        </body>
-      </html>
-    </ClerkProvider>
+      <body className="min-h-full flex flex-col bg-white text-[#0A2540]">
+        <Navbar />
+        <main className="flex-1">{children}</main>
+        <Footer />
+        <Chatbot />
+        <Toaster position="top-center" richColors closeButton />
+      </body>
+    </html>
   );
 }
