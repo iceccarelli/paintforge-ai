@@ -1,5 +1,33 @@
 import Link from "next/link";
-import { Mail } from "lucide-react";
+import {
+  Mail,
+  Linkedin,
+  Twitter,
+  Youtube,
+  Instagram,
+  Facebook,
+  Music2,
+  MessageCircle,
+  Github,
+  MessageSquare,
+} from "lucide-react";
+
+// ---------------------------------------------------------------------------
+// SOCIAL LINKS — fill in each `href` when the account exists.
+// Leave `href: ""` until then: the icon renders as a muted placeholder
+// (not a clickable dead link). The moment you paste a URL it goes live.
+// ---------------------------------------------------------------------------
+const socialLinks = [
+  { icon: Linkedin, href: "", label: "LinkedIn" }, // TODO: https://linkedin.com/company/...
+  { icon: Twitter, href: "", label: "X (Twitter)" }, // TODO: https://x.com/...
+  { icon: Youtube, href: "", label: "YouTube" }, // TODO: https://youtube.com/@...
+  { icon: Instagram, href: "", label: "Instagram" }, // TODO: https://instagram.com/...
+  { icon: Facebook, href: "", label: "Facebook" }, // TODO: https://facebook.com/...
+  { icon: Music2, href: "", label: "TikTok" }, // TODO: https://tiktok.com/@...
+  { icon: MessageCircle, href: "", label: "Discord" }, // TODO: https://discord.gg/...
+  { icon: Github, href: "", label: "GitHub" }, // TODO: https://github.com/...
+  { icon: MessageSquare, href: "", label: "Reddit" }, // TODO: https://reddit.com/r/...
+];
 
 const CONTACT_EMAIL =
   process.env.NEXT_PUBLIC_CONTACT_EMAIL || "vince.ceccarelli@gmail.com";
@@ -127,12 +155,42 @@ export function Footer() {
             </span>
           </div>
 
-          <a
-            href={`mailto:${CONTACT_EMAIL}`}
-            className="flex items-center gap-2 text-white/60 hover:text-white transition-colors"
-          >
-            <Mail size={16} /> {CONTACT_EMAIL}
-          </a>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+            {/* 9 social icons — live links once hrefs are filled in above */}
+            <div className="flex items-center gap-5">
+              {socialLinks.map((social) => {
+                const Icon = social.icon;
+                return social.href ? (
+                  <a
+                    key={social.label}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white/60 hover:text-white transition-colors hover:scale-110"
+                    aria-label={social.label}
+                  >
+                    <Icon size={18} />
+                  </a>
+                ) : (
+                  <span
+                    key={social.label}
+                    className="text-white/25 cursor-default"
+                    aria-label={`${social.label} (coming soon)`}
+                    title={`${social.label} — coming soon`}
+                  >
+                    <Icon size={18} />
+                  </span>
+                );
+              })}
+            </div>
+
+            <a
+              href={`mailto:${CONTACT_EMAIL}`}
+              className="flex items-center gap-2 text-white/60 hover:text-white transition-colors"
+            >
+              <Mail size={16} /> {CONTACT_EMAIL}
+            </a>
+          </div>
         </div>
       </div>
     </footer>
