@@ -1,0 +1,823 @@
+From 4a14c14638f7fc76e7826bf13f8f338ed60ff2d1 Mon Sep 17 00:00:00 2001
+From: Vincenzo Grimaldi <vince.ceccarelli@gmail.com>
+Date: Sat, 4 Jul 2026 15:50:23 +0000
+Subject: [PATCH] feat(ui): AWS-pattern header/footer + Ken Burns hero reel
+
+Header (AWS layout pattern, PaintForge content):
+- Two-tier: dark utility bar (Contact, Product Preview, Pilot Program)
+  above white primary nav with logo, Discover dropdown, links, CTA
+
+Footer (AWS layout pattern, PaintForge content):
+- 5 dense columns: Learn / Product / Solutions / Company / Legal
+- 'Back to top' divider row; #top anchor on <html> works on every page
+- Bottom bar: pre-launch statement + 9 clickable social icons + legal
+  line with Privacy/Terms/contact email/copyright
+
+Hero:
+- New HeroReel component: 8 Unsplash image slots, preloaded and
+  failure-filtered (dead URL can never break the hero), Fisher-Yates
+  shuffled on every page load so rotation order differs per visit
+- 4 Ken Burns motion variants (zoom-in TL, zoom-out BR, pan right,
+  pan up) with 1.8s crossfade, navy legibility overlays, and
+  prefers-reduced-motion support
+
+Socials:
+- All 9 icons clickable now, pointing at each platform's site until
+  PaintForge profiles exist; profile URL formats documented inline
+---
+ app/globals.css         |  40 ++++++
+ app/layout.tsx          |   1 +
+ app/page.tsx            |   8 +-
+ components/Footer.tsx   | 286 ++++++++++++++++++----------------------
+ components/HeroReel.tsx | 109 +++++++++++++++
+ components/Navbar.tsx   | 224 ++++++++++++++++++-------------
+ 6 files changed, 419 insertions(+), 249 deletions(-)
+ create mode 100644 components/HeroReel.tsx
+
+diff --git a/app/globals.css b/app/globals.css
+index c8bac63..ecf824d 100644
+--- a/app/globals.css
++++ b/app/globals.css
+@@ -310,3 +310,43 @@ button, a {
+ button:active, a:active {
+   transform: scale(0.985);
+ }
++
++/* ---------------------------------------------------------------------------
++   Ken Burns hero reel — 4 motion variants assigned by slide index
++   --------------------------------------------------------------------------- */
++.kb {
++  will-change: transform;
++  animation-duration: 11s;
++  animation-timing-function: ease-in-out;
++  animation-fill-mode: both;
++  animation-iteration-count: 1;
++}
++.kb-0 { animation-name: kbZoomInTL; }
++.kb-1 { animation-name: kbZoomOutBR; }
++.kb-2 { animation-name: kbPanRight; }
++.kb-3 { animation-name: kbPanUp; }
++
++@keyframes kbZoomInTL {
++  from { transform: scale(1) translate(0, 0); }
++  to   { transform: scale(1.14) translate(-2.5%, -2%); }
++}
++@keyframes kbZoomOutBR {
++  from { transform: scale(1.14) translate(2.5%, 2%); }
++  to   { transform: scale(1) translate(0, 0); }
++}
++@keyframes kbPanRight {
++  from { transform: scale(1.1) translate(-3%, 0); }
++  to   { transform: scale(1.1) translate(3%, 0); }
++}
++@keyframes kbPanUp {
++  from { transform: scale(1.1) translate(0, 2.5%); }
++  to   { transform: scale(1.12) translate(0, -2.5%); }
++}
++
++@media (prefers-reduced-motion: reduce) {
++  .kb { animation: none; }
++}
++
++/* AWS-pattern header utility bar */
++.utility-bar a { color: rgba(255, 255, 255, 0.85); }
++.utility-bar a:hover { color: #ffffff; }
+diff --git a/app/layout.tsx b/app/layout.tsx
+index 1354ab9..915f6bd 100644
+--- a/app/layout.tsx
++++ b/app/layout.tsx
+@@ -35,6 +35,7 @@ export default function RootLayout({
+ }: Readonly<{ children: React.ReactNode }>) {
+   return (
+     <html
++      id="top"
+       lang="en"
+       className={`${GeistSans.variable} ${GeistMono.variable} h-full antialiased`}
+     >
+diff --git a/app/page.tsx b/app/page.tsx
+index 05dbc31..ef89ae6 100644
+--- a/app/page.tsx
++++ b/app/page.tsx
+@@ -11,13 +11,15 @@ import {
+ } from "lucide-react";
+ import { ROICalculator } from "@/components/ROICalculator";
+ import { ContactForm } from "@/components/ContactForm";
++import { HeroReel } from "@/components/HeroReel";
+ 
+ export default function PaintForgeHomepage() {
+   return (
+     <div className="overflow-hidden">
+-      {/* HERO */}
+-      <section className="relative pt-16 pb-20 bg-[#0A2540] text-white">
+-        <div className="max-w-5xl mx-auto px-6 text-center">
++      {/* HERO — Ken Burns image reel behind, randomized per visit */}
++      <section id="top" className="relative pt-20 pb-24 bg-[#0A2540] text-white">
++        <HeroReel />
++        <div className="relative max-w-5xl mx-auto px-6 text-center">
+           <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-white/10 text-xs tracking-[2px] font-medium mb-6">
+             IN DEVELOPMENT • GTA PILOT PROGRAM • 2026
+           </div>
+diff --git a/components/Footer.tsx b/components/Footer.tsx
+index 25cde3c..d637b77 100644
+--- a/components/Footer.tsx
++++ b/components/Footer.tsx
+@@ -1,6 +1,7 @@
+ import Link from "next/link";
+ import {
+   Mail,
++  ArrowUp,
+   Linkedin,
+   Twitter,
+   Youtube,
+@@ -12,25 +13,71 @@ import {
+   MessageSquare,
+ } from "lucide-react";
+ 
++const CONTACT_EMAIL =
++  process.env.NEXT_PUBLIC_CONTACT_EMAIL || "vince.ceccarelli@gmail.com";
++
+ // ---------------------------------------------------------------------------
+-// SOCIAL LINKS — fill in each `href` when the account exists.
+-// Leave `href: ""` until then: the icon renders as a muted placeholder
+-// (not a clickable dead link). The moment you paste a URL it goes live.
++// SOCIAL LINKS — clickable now. Each href points at the platform itself until
++// the PaintForge account exists; when it does, replace the href with the
++// profile URL (formats in the comments). Nothing else needs to change.
+ // ---------------------------------------------------------------------------
+ const socialLinks = [
+-  { icon: Linkedin, href: "", label: "LinkedIn" }, // TODO: https://linkedin.com/company/...
+-  { icon: Twitter, href: "", label: "X (Twitter)" }, // TODO: https://x.com/...
+-  { icon: Youtube, href: "", label: "YouTube" }, // TODO: https://youtube.com/@...
+-  { icon: Instagram, href: "", label: "Instagram" }, // TODO: https://instagram.com/...
+-  { icon: Facebook, href: "", label: "Facebook" }, // TODO: https://facebook.com/...
+-  { icon: Music2, href: "", label: "TikTok" }, // TODO: https://tiktok.com/@...
+-  { icon: MessageCircle, href: "", label: "Discord" }, // TODO: https://discord.gg/...
+-  { icon: Github, href: "", label: "GitHub" }, // TODO: https://github.com/...
+-  { icon: MessageSquare, href: "", label: "Reddit" }, // TODO: https://reddit.com/r/...
++  { icon: Linkedin, href: "https://www.linkedin.com", label: "LinkedIn" }, // → https://linkedin.com/company/paintforge
++  { icon: Twitter, href: "https://x.com", label: "X (Twitter)" }, // → https://x.com/paintforge
++  { icon: Youtube, href: "https://www.youtube.com", label: "YouTube" }, // → https://youtube.com/@paintforge
++  { icon: Instagram, href: "https://www.instagram.com", label: "Instagram" }, // → https://instagram.com/paintforge
++  { icon: Facebook, href: "https://www.facebook.com", label: "Facebook" }, // → https://facebook.com/paintforge
++  { icon: Music2, href: "https://www.tiktok.com", label: "TikTok" }, // → https://tiktok.com/@paintforge
++  { icon: MessageCircle, href: "https://discord.com", label: "Discord" }, // → https://discord.gg/<invite>
++  { icon: Github, href: "https://github.com", label: "GitHub" }, // → https://github.com/paintforge
++  { icon: MessageSquare, href: "https://www.reddit.com", label: "Reddit" }, // → https://reddit.com/r/paintforge
+ ];
+ 
+-const CONTACT_EMAIL =
+-  process.env.NEXT_PUBLIC_CONTACT_EMAIL || "vince.ceccarelli@gmail.com";
++const columns: { title: string; links: { href: string; label: string }[] }[] = [
++  {
++    title: "Learn",
++    links: [
++      { href: "/#features", label: "What Is PaintForge?" },
++      { href: "/#how-it-works", label: "How It Works" },
++      { href: "/resources#targets", label: "Engineering Targets" },
++      { href: "/resources#methodology", label: "ROI Methodology" },
++      { href: "/resources#case-studies", label: "Case Studies" },
++    ],
++  },
++  {
++    title: "Product",
++    links: [
++      { href: "/#roi-calculator", label: "ROI Model" },
++      { href: "/pricing", label: "Planned RaaS Pricing" },
++      { href: "/dashboard", label: "Product Preview" },
++      { href: "/#technology", label: "Technology Stack" },
++    ],
++  },
++  {
++    title: "Solutions",
++    links: [
++      { href: "/solutions", label: "General Contractors" },
++      { href: "/solutions", label: "Painting Subcontractors" },
++      { href: "/solutions", label: "GTA Housing & Condos" },
++      { href: "/solutions", label: "Enterprise & Institutional" },
++    ],
++  },
++  {
++    title: "Company",
++    links: [
++      { href: "/#talk-to-expert", label: "2026 Pilot Program" },
++      { href: "/resources", label: "Resources" },
++      { href: `mailto:${CONTACT_EMAIL}`, label: "Contact Us" },
++    ],
++  },
++  {
++    title: "Legal",
++    links: [
++      { href: "/legal/privacy", label: "Privacy Policy" },
++      { href: "/legal/terms", label: "Terms of Use" },
++    ],
++  },
++];
+ 
+ export function Footer() {
+   const currentYear = new Date().getFullYear();
+@@ -38,158 +85,85 @@ export function Footer() {
+   return (
+     <footer className="bg-[#0A2540] text-white/90 pt-16 pb-8">
+       <div className="max-w-7xl mx-auto px-6">
+-        <div className="grid grid-cols-2 md:grid-cols-4 gap-y-10 pb-12 border-b border-white/10">
+-          {/* Product */}
+-          <div>
+-            <div className="font-semibold text-white mb-4 tracking-tight">
+-              Product
++        {/* Column grid (AWS pattern) */}
++        <div className="grid grid-cols-2 md:grid-cols-5 gap-y-10 gap-x-6 pb-10">
++          {columns.map((col) => (
++            <div key={col.title}>
++              <div className="font-semibold text-white mb-4 tracking-tight">
++                {col.title}
++              </div>
++              <ul className="space-y-2.5 text-sm">
++                {col.links.map((l) => (
++                  <li key={l.label}>
++                    <Link
++                      href={l.href}
++                      className="text-white/65 hover:text-white transition"
++                    >
++                      {l.label}
++                    </Link>
++                  </li>
++                ))}
++              </ul>
+             </div>
+-            <ul className="space-y-2.5 text-sm">
+-              <li>
+-                <Link href="/#features" className="hover:text-white transition">
+-                  Features
+-                </Link>
+-              </li>
+-              <li>
+-                <Link href="/#how-it-works" className="hover:text-white transition">
+-                  How it Works
+-                </Link>
+-              </li>
+-              <li>
+-                <Link href="/#roi-calculator" className="hover:text-white transition">
+-                  ROI Model
+-                </Link>
+-              </li>
+-              <li>
+-                <Link href="/pricing" className="hover:text-white transition">
+-                  Planned Pricing
+-                </Link>
+-              </li>
+-              <li>
+-                <Link href="/dashboard" className="hover:text-white transition">
+-                  Product Preview
+-                </Link>
+-              </li>
+-            </ul>
+-          </div>
++          ))}
++        </div>
+ 
+-          {/* Solutions */}
+-          <div>
+-            <div className="font-semibold text-white mb-4 tracking-tight">
+-              Solutions
+-            </div>
+-            <ul className="space-y-2.5 text-sm">
+-              <li>
+-                <Link href="/solutions" className="hover:text-white transition">
+-                  For General Contractors
+-                </Link>
+-              </li>
+-              <li>
+-                <Link href="/solutions" className="hover:text-white transition">
+-                  Painting Subcontractors
+-                </Link>
+-              </li>
+-              <li>
+-                <Link href="/solutions" className="hover:text-white transition">
+-                  GTA Housing &amp; Condos
+-                </Link>
+-              </li>
+-            </ul>
++        {/* Back to top (AWS pattern) */}
++        <div className="border-y border-white/10 py-4 text-center">
++          <a
++            href="#top"
++            className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-white transition"
++          >
++            Back to top <ArrowUp size={14} />
++          </a>
++        </div>
++
++        {/* Bottom bar: statement + socials (AWS pattern) */}
++        <div className="pt-8 flex flex-col md:flex-row md:items-start justify-between gap-6 text-sm">
++          <div className="text-white/60 max-w-2xl leading-relaxed">
++            PaintForge is a pre-launch robotics venture building autonomous
++            painting systems for Ontario contractors. All performance figures
++            on this site are engineering targets pending validation in 2026
++            pilot deployments.
+           </div>
+ 
+-          {/* Company */}
+-          <div>
+-            <div className="font-semibold text-white mb-4 tracking-tight">
+-              Company
+-            </div>
+-            <ul className="space-y-2.5 text-sm">
+-              <li>
+-                <Link href="/resources" className="hover:text-white transition">
+-                  Resources &amp; Methodology
+-                </Link>
+-              </li>
+-              <li>
+-                <Link href="/#talk-to-expert" className="hover:text-white transition">
+-                  Pilot Program
+-                </Link>
+-              </li>
+-              <li>
++          {/* 9 social icons — clickable, platform-level until profiles exist */}
++          <div className="flex items-center gap-4 flex-shrink-0">
++            {socialLinks.map((social) => {
++              const Icon = social.icon;
++              return (
+                 <a
+-                  href={`mailto:${CONTACT_EMAIL}`}
+-                  className="hover:text-white transition"
++                  key={social.label}
++                  href={social.href}
++                  target="_blank"
++                  rel="noopener noreferrer"
++                  className="text-white/60 hover:text-white transition-colors hover:scale-110"
++                  aria-label={social.label}
+                 >
+-                  Contact
++                  <Icon size={18} />
+                 </a>
+-              </li>
+-            </ul>
+-          </div>
+-
+-          {/* Legal */}
+-          <div>
+-            <div className="font-semibold text-white mb-4 tracking-tight">
+-              Legal
+-            </div>
+-            <ul className="space-y-2.5 text-sm">
+-              <li>
+-                <Link href="/legal/privacy" className="hover:text-white transition">
+-                  Privacy Policy
+-                </Link>
+-              </li>
+-              <li>
+-                <Link href="/legal/terms" className="hover:text-white transition">
+-                  Terms of Use
+-                </Link>
+-              </li>
+-            </ul>
++              );
++            })}
+           </div>
+         </div>
+ 
+-        {/* Bottom bar */}
+-        <div className="pt-8 flex flex-col md:flex-row md:items-center justify-between gap-6 text-sm">
+-          <div className="text-white/60">
+-            © {currentYear} PaintForge. Toronto, Ontario, Canada.
+-            <span className="hidden md:inline">
+-              {" "}
+-              · A pre-launch robotics venture — pilot deployments planned for
+-              2026.
+-            </span>
+-          </div>
+-
+-          <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+-            {/* 9 social icons — live links once hrefs are filled in above */}
+-            <div className="flex items-center gap-5">
+-              {socialLinks.map((social) => {
+-                const Icon = social.icon;
+-                return social.href ? (
+-                  <a
+-                    key={social.label}
+-                    href={social.href}
+-                    target="_blank"
+-                    rel="noopener noreferrer"
+-                    className="text-white/60 hover:text-white transition-colors hover:scale-110"
+-                    aria-label={social.label}
+-                  >
+-                    <Icon size={18} />
+-                  </a>
+-                ) : (
+-                  <span
+-                    key={social.label}
+-                    className="text-white/25 cursor-default"
+-                    aria-label={`${social.label} (coming soon)`}
+-                    title={`${social.label} — coming soon`}
+-                  >
+-                    <Icon size={18} />
+-                  </span>
+-                );
+-              })}
+-            </div>
+-
+-            <a
+-              href={`mailto:${CONTACT_EMAIL}`}
+-              className="flex items-center gap-2 text-white/60 hover:text-white transition-colors"
+-            >
+-              <Mail size={16} /> {CONTACT_EMAIL}
+-            </a>
++        {/* Legal line (AWS pattern) */}
++        <div className="pt-6 flex flex-col md:flex-row md:items-center gap-x-8 gap-y-2 text-[13px] text-white/50">
++          <Link href="/legal/privacy" className="hover:text-white transition">
++            Privacy
++          </Link>
++          <Link href="/legal/terms" className="hover:text-white transition">
++            Terms
++          </Link>
++          <a
++            href={`mailto:${CONTACT_EMAIL}`}
++            className="hover:text-white transition inline-flex items-center gap-1.5"
++          >
++            <Mail size={13} /> {CONTACT_EMAIL}
++          </a>
++          <div className="md:ml-auto">
++            © {currentYear} PaintForge. Toronto, Ontario, Canada. All rights
++            reserved.
+           </div>
+         </div>
+       </div>
+diff --git a/components/HeroReel.tsx b/components/HeroReel.tsx
+new file mode 100644
+index 0000000..1faf170
+--- /dev/null
++++ b/components/HeroReel.tsx
+@@ -0,0 +1,109 @@
++"use client";
++
++import { useEffect, useRef, useState } from "react";
++
++// ---------------------------------------------------------------------------
++// HERO IMAGE REEL — 8 Unsplash images, construction / painting / robotics.
++// Swap any URL below for your own picks (unsplash.com → right-click →
++// "Copy image address", or use images.unsplash.com/photo-<ID>?auto=format...).
++// Images are preloaded and any URL that fails to load is silently dropped,
++// so a dead link can never break the hero — the navy gradient always renders
++// underneath as the base layer.
++// ---------------------------------------------------------------------------
++const HERO_IMAGES: string[] = [
++  "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1920&q=70",
++  "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=1920&q=70",
++  "https://images.unsplash.com/photo-1487958449943-2429e8be8625?auto=format&fit=crop&w=1920&q=70",
++  "https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&w=1920&q=70",
++  "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1920&q=70",
++  "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1920&q=70",
++  "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1920&q=70",
++  "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1920&q=70",
++];
++
++const SLIDE_MS = 8000; // time per slide
++const FADE_MS = 1800; // crossfade duration
++
++// Fisher–Yates — a fresh random order on every page load
++function shuffle<T>(arr: T[]): T[] {
++  const a = [...arr];
++  for (let i = a.length - 1; i > 0; i--) {
++    const j = Math.floor(Math.random() * (i + 1));
++    [a[i], a[j]] = [a[j], a[i]];
++  }
++  return a;
++}
++
++function preload(url: string): Promise<string | null> {
++  return new Promise((resolve) => {
++    const img = new Image();
++    img.onload = () => resolve(url);
++    img.onerror = () => resolve(null);
++    img.src = url;
++  });
++}
++
++export function HeroReel() {
++  const [images, setImages] = useState<string[]>([]);
++  const [index, setIndex] = useState(0);
++  const [visible, setVisible] = useState(false);
++  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
++
++  // Mount: preload all candidates, keep the ones that load, shuffle them.
++  useEffect(() => {
++    let cancelled = false;
++    Promise.all(HERO_IMAGES.map(preload)).then((results) => {
++      if (cancelled) return;
++      const ok = results.filter((u): u is string => u !== null);
++      if (ok.length === 0) return; // gradient-only hero, still looks intentional
++      setImages(shuffle(ok));
++      setVisible(true);
++    });
++    return () => {
++      cancelled = true;
++    };
++  }, []);
++
++  // Rotation
++  useEffect(() => {
++    if (images.length < 2) return;
++    timerRef.current = setInterval(
++      () => setIndex((i) => (i + 1) % images.length),
++      SLIDE_MS
++    );
++    return () => {
++      if (timerRef.current) clearInterval(timerRef.current);
++    };
++  }, [images]);
++
++  return (
++    <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
++      {/* Base layer: brand navy gradient — always present */}
++      <div className="absolute inset-0 bg-gradient-to-br from-[#0A2540] via-[#0D2B4A] to-[#081C33]" />
++
++      {/* Image layers: current + previous kept mounted for crossfade */}
++      {images.map((src, i) => {
++        const isActive = i === index;
++        const isPrev = i === (index - 1 + images.length) % images.length;
++        if (!isActive && !isPrev) return null;
++        return (
++          <div
++            key={src}
++            className={`absolute inset-0 kb kb-${i % 4}`}
++            style={{
++              backgroundImage: `url(${src})`,
++              backgroundSize: "cover",
++              backgroundPosition: "center",
++              opacity: visible && isActive ? 1 : 0,
++              transition: `opacity ${FADE_MS}ms ease-in-out`,
++            }}
++          />
++        );
++      })}
++
++      {/* Legibility overlay: navy wash + vignette so white text always reads */}
++      <div className="absolute inset-0 bg-[#0A2540]/78" />
++      <div className="absolute inset-0 bg-gradient-to-t from-[#0A2540] via-transparent to-[#0A2540]/60" />
++    </div>
++  );
++}
+diff --git a/components/Navbar.tsx b/components/Navbar.tsx
+index 705d757..d3d88cd 100644
+--- a/components/Navbar.tsx
++++ b/components/Navbar.tsx
+@@ -2,121 +2,165 @@
+ 
+ import React, { useState } from "react";
+ import Link from "next/link";
+-import { Menu, X, ChevronDown } from "lucide-react";
++import { Menu, X, ChevronDown, Mail } from "lucide-react";
++
++const CONTACT_EMAIL =
++  process.env.NEXT_PUBLIC_CONTACT_EMAIL || "vince.ceccarelli@gmail.com";
+ 
+ export function Navbar() {
+   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+ 
+   const navLinks = [
+-    { href: "/#features", label: "Features" },
+-    { href: "/#how-it-works", label: "How it Works" },
+-    { href: "/pricing", label: "Pricing" },
++    { href: "/#features", label: "Platform" },
+     { href: "/solutions", label: "Solutions" },
++    { href: "/pricing", label: "Pricing" },
+     { href: "/resources", label: "Resources" },
+     { href: "/dashboard", label: "Product Preview" },
+   ];
+ 
+   return (
+-    <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-lg border-b border-[#E2E8F0]">
+-      <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+-        {/* Logo */}
+-        <Link href="/" className="flex items-center gap-3 group">
+-          <div className="w-9 h-9 rounded-xl bg-[#0A2540] flex items-center justify-center">
+-            <span className="text-white font-bold text-2xl tracking-tighter">
+-              PF
+-            </span>
+-          </div>
+-          <div>
+-            <div className="font-semibold text-2xl tracking-[-0.04em] text-[#0A2540] group-hover:text-[#FF6B35] transition-colors">
+-              PaintForge
+-            </div>
+-            <div className="text-[10px] text-[#64748B] -mt-1.5 font-mono tracking-[2px]">
+-              ROBOTICS · IN DEVELOPMENT
+-            </div>
+-          </div>
+-        </Link>
+-
+-        {/* Desktop Navigation */}
+-        <div className="hidden lg:flex items-center gap-9 text-sm font-medium">
+-          {/* Platform Dropdown */}
+-          <div className="relative group">
+-            <button className="flex items-center gap-1 text-[#475569] hover:text-[#0A2540] transition-colors">
+-              Platform <ChevronDown className="w-3.5 h-3.5" />
+-            </button>
+-            <div className="absolute top-full left-0 mt-2 w-72 bg-white border border-[#E2E8F0] rounded-xl shadow-xl py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+-              <Link href="/" className="block px-5 py-3 hover:bg-[#F8FAFC] text-sm">
+-                <div className="font-semibold text-[#0A2540]">PaintForge</div>
+-                <div className="text-xs text-[#64748B]">
+-                  Robotic painting · 2026 pilot program
+-                </div>
+-              </Link>
+-              <div className="block px-5 py-3 text-sm border-t cursor-default">
+-                <div className="font-semibold text-[#94A3B8]">
+-                  Future end-effectors
+-                </div>
+-                <div className="text-xs text-[#94A3B8]">
+-                  Additional finishing trades on the same base — roadmap
+-                </div>
+-              </div>
+-            </div>
+-          </div>
+-
+-          {navLinks.map((link) => (
+-            <Link
+-              key={link.href}
+-              href={link.href}
+-              className="text-[#475569] hover:text-[#0A2540] transition-colors"
+-            >
+-              {link.label}
+-            </Link>
+-          ))}
+-        </div>
+-
+-        {/* Right side CTA */}
+-        <div className="hidden lg:flex items-center gap-3">
++    <header className="sticky top-0 z-50">
++      {/* Tier 1 — dark utility bar (AWS pattern) */}
++      <div className="utility-bar bg-[#0A2540] text-white/85 text-[13px]">
++        <div className="max-w-7xl mx-auto px-6 h-9 flex items-center justify-end gap-6">
++          <a
++            href={`mailto:${CONTACT_EMAIL}`}
++            className="hidden sm:flex items-center gap-1.5 hover:text-white transition-colors"
++          >
++            <Mail size={13} /> Contact us
++          </a>
++          <Link href="/dashboard" className="hover:text-white transition-colors">
++            Product Preview
++          </Link>
+           <Link
+             href="/#talk-to-expert"
+-            className="btn-primary text-sm px-6 py-2.5 shadow-sm"
++            className="font-medium text-[#FF9A6B] hover:text-white transition-colors"
+           >
+-            Apply for the Pilot
++            2026 Pilot Program
+           </Link>
+         </div>
+-
+-        {/* Mobile Menu Button */}
+-        <button
+-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+-          className="lg:hidden p-2 text-[#475569]"
+-          aria-label="Toggle menu"
+-        >
+-          {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+-        </button>
+       </div>
+ 
+-      {/* Mobile Menu */}
+-      {mobileMenuOpen && (
+-        <div className="lg:hidden border-t bg-white px-6 py-6 flex flex-col gap-4 text-sm font-medium">
+-          {navLinks.map((link) => (
+-            <Link
+-              key={link.href}
+-              href={link.href}
+-              className="py-1.5 text-[#475569]"
+-              onClick={() => setMobileMenuOpen(false)}
+-            >
+-              {link.label}
+-            </Link>
+-          ))}
++      {/* Tier 2 — white primary nav (AWS pattern) */}
++      <nav className="bg-white/95 backdrop-blur-lg border-b border-[#E2E8F0]">
++        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
++          {/* Logo */}
++          <Link href="/" className="flex items-center gap-3 group">
++            <div className="w-9 h-9 rounded-xl bg-[#0A2540] flex items-center justify-center">
++              <span className="text-white font-bold text-2xl tracking-tighter">
++                PF
++              </span>
++            </div>
++            <div>
++              <div className="font-semibold text-xl tracking-[-0.04em] text-[#0A2540] group-hover:text-[#FF6B35] transition-colors">
++                PaintForge
++              </div>
++              <div className="text-[9px] text-[#64748B] -mt-1 font-mono tracking-[2px]">
++                ROBOTICS · IN DEVELOPMENT
++              </div>
++            </div>
++          </Link>
++
++          {/* Desktop Navigation */}
++          <div className="hidden lg:flex items-center gap-8 text-sm font-medium">
++            {/* Platform Dropdown */}
++            <div className="relative group">
++              <button className="flex items-center gap-1 text-[#475569] hover:text-[#0A2540] transition-colors">
++                Discover PaintForge <ChevronDown className="w-3.5 h-3.5" />
++              </button>
++              <div className="absolute top-full left-0 mt-2 w-72 bg-white border border-[#E2E8F0] rounded-xl shadow-xl py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
++                <Link
++                  href="/#how-it-works"
++                  className="block px-5 py-3 hover:bg-[#F8FAFC] text-sm"
++                >
++                  <div className="font-semibold text-[#0A2540]">
++                    How it Works
++                  </div>
++                  <div className="text-xs text-[#64748B]">
++                    Scan → plan → autonomous execution
++                  </div>
++                </Link>
++                <Link
++                  href="/resources#targets"
++                  className="block px-5 py-3 hover:bg-[#F8FAFC] text-sm border-t"
++                >
++                  <div className="font-semibold text-[#0A2540]">
++                    Engineering Targets
++                  </div>
++                  <div className="text-xs text-[#64748B]">
++                    The numbers we are building toward
++                  </div>
++                </Link>
++                <Link
++                  href="/resources#methodology"
++                  className="block px-5 py-3 hover:bg-[#F8FAFC] text-sm border-t"
++                >
++                  <div className="font-semibold text-[#0A2540]">
++                    ROI Methodology
++                  </div>
++                  <div className="text-xs text-[#64748B]">
++                    Every assumption, published
++                  </div>
++                </Link>
++              </div>
++            </div>
+ 
+-          <div className="pt-4 border-t flex flex-col gap-3">
++            {navLinks.map((link) => (
++              <Link
++                key={link.href}
++                href={link.href}
++                className="text-[#475569] hover:text-[#0A2540] transition-colors"
++              >
++                {link.label}
++              </Link>
++            ))}
++          </div>
++
++          {/* Right side CTA */}
++          <div className="hidden lg:flex items-center gap-3">
+             <Link
+               href="/#talk-to-expert"
+-              className="btn-primary text-center"
+-              onClick={() => setMobileMenuOpen(false)}
++              className="btn-primary text-sm px-6 py-2.5 shadow-sm"
+             >
+               Apply for the Pilot
+             </Link>
+           </div>
++
++          {/* Mobile Menu Button */}
++          <button
++            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
++            className="lg:hidden p-2 text-[#475569]"
++            aria-label="Toggle menu"
++          >
++            {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
++          </button>
+         </div>
+-      )}
+-    </nav>
++
++        {/* Mobile Menu */}
++        {mobileMenuOpen && (
++          <div className="lg:hidden border-t bg-white px-6 py-6 flex flex-col gap-4 text-sm font-medium">
++            {navLinks.map((link) => (
++              <Link
++                key={link.href}
++                href={link.href}
++                className="py-1.5 text-[#475569]"
++                onClick={() => setMobileMenuOpen(false)}
++              >
++                {link.label}
++              </Link>
++            ))}
++            <div className="pt-4 border-t flex flex-col gap-3">
++              <Link
++                href="/#talk-to-expert"
++                className="btn-primary text-center"
++                onClick={() => setMobileMenuOpen(false)}
++              >
++                Apply for the Pilot
++              </Link>
++            </div>
++          </div>
++        )}
++      </nav>
++    </header>
+   );
+ }
+-- 
+2.43.0
+
