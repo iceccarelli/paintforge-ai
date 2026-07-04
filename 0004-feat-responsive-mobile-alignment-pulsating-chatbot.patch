@@ -1,0 +1,247 @@
+From c2d277c9b8fe517d73c735f7e0720179beff1a04 Mon Sep 17 00:00:00 2001
+From: Vincenzo Grimaldi <vince.ceccarelli@gmail.com>
+Date: Sat, 4 Jul 2026 16:01:24 +0000
+Subject: [PATCH] feat(responsive): full mobile/viewport alignment + pulsating
+ chatbot launcher
+
+Responsive fixes (every breakpoint 320px and up):
+- Hero h1 now scales text-4xl -> sm:5xl -> md:6xl -> lg:7xl; subhead
+  and all large headings/CTAs given proper mobile steps
+- Fixed hero divider w-[900px] -> w-full max-w-[900px] (horizontal
+  overflow source on phones)
+- Chat panel was fixed 380x560px and overflowed small phones; now
+  w-[calc(100vw-2rem)] max-w-[380px], h-[min(560px,100dvh-7.5rem)] --
+  fits every device height including keyboard-open states
+- Footer columns collapse 2 -> sm:3 -> lg:5 instead of jumping to 5 at md
+- Utility bar tightened for narrow screens; Product Preview link hidden
+  below sm to prevent crowding
+- Pricing page display numbers scale down on mobile
+- prefers-reduced-motion respected for all new animation
+
+Chatbot launcher:
+- Icon changed MessageCircle -> Bot (on-brand for a robotics company)
+- Soothing dual-ring pulse: two staggered expanding rings (3.2s,
+  Intercom-style) + gentle breathe scale on the button; pulse pauses
+  while the panel is open; fully disabled under reduced-motion
+- Launcher repositioned bottom-5 right-5 on mobile, bottom-8 right-8 desktop
+
+Honesty: removed leftover fabricated promise in chat footer
+('real responses in < 2 min') -> scripted-demo disclaimer
+---
+ app/globals.css        | 30 ++++++++++++++++++++++++++++++
+ app/page.tsx           | 12 ++++++------
+ app/pricing/page.tsx   |  6 +++---
+ components/Chatbot.tsx | 17 ++++++++++++-----
+ components/Footer.tsx  |  2 +-
+ components/Navbar.tsx  |  4 ++--
+ 6 files changed, 54 insertions(+), 17 deletions(-)
+
+diff --git a/app/globals.css b/app/globals.css
+index ecf824d..d4e467d 100644
+--- a/app/globals.css
++++ b/app/globals.css
+@@ -350,3 +350,33 @@ button:active, a:active {
+ /* AWS-pattern header utility bar */
+ .utility-bar a { color: rgba(255, 255, 255, 0.85); }
+ .utility-bar a:hover { color: #ffffff; }
++
++/* ---------------------------------------------------------------------------
++   Chat launcher — soothing professional pulse (Intercom-style)
++   --------------------------------------------------------------------------- */
++.chat-launcher-ring {
++  animation: chatRing 3.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
++  pointer-events: none;
++}
++.chat-launcher-ring-delayed {
++  animation-delay: 1.6s;
++}
++@keyframes chatRing {
++  0%   { transform: scale(1);    opacity: 0.35; }
++  70%  { transform: scale(1.65); opacity: 0; }
++  100% { transform: scale(1.65); opacity: 0; }
++}
++
++.chat-launcher-breathe {
++  animation: chatBreathe 3.2s ease-in-out infinite;
++}
++@keyframes chatBreathe {
++  0%, 100% { transform: scale(1); }
++  50%      { transform: scale(1.045); }
++}
++
++@media (prefers-reduced-motion: reduce) {
++  .chat-launcher-ring,
++  .chat-launcher-breathe { animation: none; }
++  .chat-launcher-ring { display: none; }
++}
+diff --git a/app/page.tsx b/app/page.tsx
+index ef89ae6..8f2b282 100644
+--- a/app/page.tsx
++++ b/app/page.tsx
+@@ -24,7 +24,7 @@ export default function PaintForgeHomepage() {
+             IN DEVELOPMENT • GTA PILOT PROGRAM • 2026
+           </div>
+ 
+-          <h1 className="text-6xl md:text-7xl font-semibold tracking-[-0.05em] leading-[1.05] mb-6">
++          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold tracking-[-0.05em] leading-[1.05] mb-6">
+             Robotic Painting,
+             <br />
+             Built for Contractors
+@@ -32,7 +32,7 @@ export default function PaintForgeHomepage() {
+             Who Finish First.
+           </h1>
+ 
+-          <p className="max-w-3xl mx-auto text-2xl text-white/80 tracking-tight mb-10">
++          <p className="max-w-3xl mx-auto text-lg sm:text-xl md:text-2xl text-white/80 tracking-tight mb-10">
+             PaintForge is an autonomous wall-and-ceiling painting platform in
+             development, engineered to multiply crew output with closed-loop
+             coating consistency. We are recruiting a small group of GTA design
+@@ -59,7 +59,7 @@ export default function PaintForgeHomepage() {
+           </p>
+         </div>
+ 
+-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[900px] h-[2px] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
++        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[900px] h-[2px] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+       </section>
+ 
+       {/* ENGINEERING TARGETS BAR */}
+@@ -238,7 +238,7 @@ export default function PaintForgeHomepage() {
+             <div className="text-[#FF6B35] text-sm font-semibold tracking-[2px] mb-3">
+               2026 PILOT PROGRAM
+             </div>
+-            <h2 className="text-4xl font-semibold tracking-tight">
++            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">
+               We are looking for a handful of
+               <br />
+               GTA contractors to build this with.
+@@ -376,12 +376,12 @@ export default function PaintForgeHomepage() {
+       {/* FINAL CTA */}
+       <section className="bg-[#0A2540] py-20 text-white text-center">
+         <div className="max-w-3xl mx-auto px-6">
+-          <h2 className="text-5xl font-semibold tracking-[-0.04em] leading-none mb-6">
++          <h2 className="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-[-0.04em] leading-tight mb-6">
+             Help define how
+             <br />
+             interiors get painted.
+           </h2>
+-          <p className="text-2xl text-white/70 mb-9">
++          <p className="text-lg sm:text-xl md:text-2xl text-white/70 mb-9">
+             The 2026 pilot cohort is small by design. If painter shortages are
+             costing you schedule or margin, talk to us.
+           </p>
+diff --git a/app/pricing/page.tsx b/app/pricing/page.tsx
+index dd6cc6b..9bd8070 100644
+--- a/app/pricing/page.tsx
++++ b/app/pricing/page.tsx
+@@ -89,12 +89,12 @@ export default function PricingPage() {
+               </div>
+               <div className="mt-6">
+                 {plan.price === "Custom" ? (
+-                  <div className="text-5xl font-semibold tracking-tighter">
++                  <div className="text-4xl md:text-5xl font-semibold tracking-tighter">
+                     Custom
+                   </div>
+                 ) : (
+                   <div>
+-                    <span className="text-5xl font-semibold tabular-nums tracking-[-2px]">
++                    <span className="text-4xl md:text-5xl font-semibold tabular-nums tracking-[-2px]">
+                       ${plan.price}
+                     </span>
+                     <span className="text-[#64748B]">/mo target</span>
+@@ -128,7 +128,7 @@ export default function PricingPage() {
+           <div className="uppercase tracking-[2px] text-xs text-[#FF6B35] mb-2">
+             ROADMAP
+           </div>
+-          <h3 className="text-4xl font-semibold tracking-tight">
++          <h3 className="text-3xl md:text-4xl font-semibold tracking-tight">
+             One base, multiple trades
+           </h3>
+           <p className="mt-4 text-lg text-white/80">
+diff --git a/components/Chatbot.tsx b/components/Chatbot.tsx
+index 2d55c05..a09491e 100644
+--- a/components/Chatbot.tsx
++++ b/components/Chatbot.tsx
+@@ -2,7 +2,7 @@
+ 
+ import React, { useState, useRef, useEffect } from 'react';
+ import { motion, AnimatePresence } from 'framer-motion';
+-import { MessageCircle, X, Send, Bot } from 'lucide-react';
++import { X, Send, Bot } from 'lucide-react';
+ 
+ interface Message {
+   id: number;
+@@ -122,10 +122,17 @@ export function Chatbot() {
+       {/* Floating Button */}
+       <button
+         onClick={() => setIsOpen(!isOpen)}
+-        className="fixed bottom-8 right-8 z-[60] w-14 h-14 rounded-full bg-[#0A2540] text-white flex items-center justify-center shadow-2xl hover:bg-[#FF6B35] transition-all active:scale-95"
++        className={`fixed bottom-5 right-5 sm:bottom-8 sm:right-8 z-[60] w-14 h-14 rounded-full bg-[#0A2540] text-white flex items-center justify-center shadow-2xl hover:bg-[#FF6B35] transition-all active:scale-95 ${!isOpen ? 'chat-launcher-breathe' : ''}`}
+         aria-label="Open PaintForge Assistant"
+       >
+-        {isOpen ? <X size={22} /> : <MessageCircle size={22} />}
++        {/* Soothing expanding pulse rings — hidden while the panel is open */}
++        {!isOpen && (
++          <>
++            <span className="chat-launcher-ring absolute inset-0 rounded-full bg-[#FF6B35]" />
++            <span className="chat-launcher-ring chat-launcher-ring-delayed absolute inset-0 rounded-full bg-[#FF6B35]" />
++          </>
++        )}
++        <span className="relative">{isOpen ? <X size={22} /> : <Bot size={24} />}</span>
+       </button>
+ 
+       {/* Chat Panel */}
+@@ -136,7 +143,7 @@ export function Chatbot() {
+             animate={{ opacity: 1, y: 0, scale: 1 }}
+             exit={{ opacity: 0, y: 20, scale: 0.98 }}
+             transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
+-            className="fixed bottom-24 right-8 z-[70] w-[380px] h-[560px] bg-white rounded-3xl border border-[#E2E8F0] shadow-2xl flex flex-col overflow-hidden chatbot-panel"
++            className="fixed bottom-[5.5rem] right-4 sm:bottom-24 sm:right-8 z-[70] w-[calc(100vw-2rem)] max-w-[380px] h-[min(560px,calc(100dvh-7.5rem))] bg-white rounded-3xl border border-[#E2E8F0] shadow-2xl flex flex-col overflow-hidden chatbot-panel"
+           >
+             {/* Header */}
+             <div className="bg-[#0A2540] text-white px-5 py-4 flex items-center justify-between">
+@@ -215,7 +222,7 @@ export function Chatbot() {
+               </button>
+             </div>
+ 
+-            <div className="text-center text-[10px] text-[#94A3B8] pb-3">This is a demo assistant. Real responses from our team in &lt; 2 min during business hours.</div>
++            <div className="text-center text-[10px] text-[#94A3B8] pb-3">Scripted demo assistant. For real answers, apply via the pilot form \u2014 we reply by email.</div>
+           </motion.div>
+         )}
+       </AnimatePresence>
+diff --git a/components/Footer.tsx b/components/Footer.tsx
+index d637b77..85c112d 100644
+--- a/components/Footer.tsx
++++ b/components/Footer.tsx
+@@ -86,7 +86,7 @@ export function Footer() {
+     <footer className="bg-[#0A2540] text-white/90 pt-16 pb-8">
+       <div className="max-w-7xl mx-auto px-6">
+         {/* Column grid (AWS pattern) */}
+-        <div className="grid grid-cols-2 md:grid-cols-5 gap-y-10 gap-x-6 pb-10">
++        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-y-10 gap-x-6 pb-10">
+           {columns.map((col) => (
+             <div key={col.title}>
+               <div className="font-semibold text-white mb-4 tracking-tight">
+diff --git a/components/Navbar.tsx b/components/Navbar.tsx
+index d3d88cd..7512512 100644
+--- a/components/Navbar.tsx
++++ b/components/Navbar.tsx
+@@ -22,14 +22,14 @@ export function Navbar() {
+     <header className="sticky top-0 z-50">
+       {/* Tier 1 — dark utility bar (AWS pattern) */}
+       <div className="utility-bar bg-[#0A2540] text-white/85 text-[13px]">
+-        <div className="max-w-7xl mx-auto px-6 h-9 flex items-center justify-end gap-6">
++        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-9 flex items-center justify-end gap-4 sm:gap-6">
+           <a
+             href={`mailto:${CONTACT_EMAIL}`}
+             className="hidden sm:flex items-center gap-1.5 hover:text-white transition-colors"
+           >
+             <Mail size={13} /> Contact us
+           </a>
+-          <Link href="/dashboard" className="hover:text-white transition-colors">
++          <Link href="/dashboard" className="hidden sm:inline hover:text-white transition-colors">
+             Product Preview
+           </Link>
+           <Link
+-- 
+2.43.0
+
