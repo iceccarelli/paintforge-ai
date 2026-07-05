@@ -52,7 +52,7 @@ export function ContactForm() {
 
   if (sent) {
     return (
-      <div className="card p-8 text-center">
+      <div className="p-8 text-center">
         <div className="text-2xl font-semibold tracking-tight mb-2">
           Inquiry received
         </div>
@@ -64,7 +64,7 @@ export function ContactForm() {
   }
 
   return (
-    <form className="card p-8 space-y-5" onSubmit={handleSubmit}>
+    <form className="p-6 space-y-5" onSubmit={handleSubmit}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div>
           <label htmlFor="cf-name" className="form-label">

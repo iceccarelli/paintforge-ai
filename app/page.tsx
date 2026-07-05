@@ -11,8 +11,8 @@ import {
   Award,
 } from "lucide-react";
 import { ROICalculator } from "@/components/ROICalculator";
-import { ContactForm } from "@/components/ContactForm";
 import { HeroReel } from "@/components/HeroReel";
+import { ApplyCTA } from "@/components/ApplyModal";
 
 export default function PaintForgeHomepage() {
   return (
@@ -41,13 +41,10 @@ export default function PaintForgeHomepage() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              href="#talk-to-expert"
+            <ApplyCTA
+              label="Apply as a Design Partner"
               className="btn-primary text-lg px-10 py-4 flex items-center gap-3 group"
-            >
-              Apply as a Design Partner
-              <ArrowRight className="group-hover:translate-x-0.5 transition" />
-            </Link>
+            />
             <a
               href="#roi-calculator"
               className="btn-secondary text-lg px-8 py-4 border-white/30 text-white hover:bg-white/10 flex items-center gap-2"
@@ -67,7 +64,6 @@ export default function PaintForgeHomepage() {
         >
           <ChevronDown size={28} />
         </a>
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[900px] h-[2px] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
       </section>
 
       {/* ENGINEERING TARGETS BAR */}
@@ -100,7 +96,7 @@ export default function PaintForgeHomepage() {
       {/* FEATURES */}
       <section id="features" className="max-w-7xl mx-auto px-6 pt-20 pb-16">
         <div className="section-header mb-12">
-          <div className="text-[#FF6B35] text-sm font-semibold tracking-[2px] mb-3">
+          <div className="kicker mb-3">
             WHAT WE ARE BUILDING
           </div>
           <h2 className="section-heading">
@@ -175,7 +171,7 @@ export default function PaintForgeHomepage() {
       <section id="how-it-works" className="bg-[#F8FAFC] py-16 border-y">
         <div className="max-w-6xl mx-auto px-6">
           <div className="section-header mb-12">
-            <div className="text-[#FF6B35] text-sm font-semibold tracking-[2px] mb-3">
+            <div className="kicker mb-3">
               THE PLANNED WORKFLOW
             </div>
             <h2 className="section-heading">
@@ -235,7 +231,7 @@ export default function PaintForgeHomepage() {
       {/* ROI MODEL */}
       <section className="max-w-7xl mx-auto px-6 py-20">
         <div className="section-header mb-10">
-          <div className="text-[#FF6B35] text-sm font-semibold tracking-[2px] mb-3">
+          <div className="kicker mb-3">
             MODEL THE ECONOMICS
           </div>
           <h2 className="section-heading">
@@ -247,7 +243,7 @@ export default function PaintForgeHomepage() {
 
         <ROICalculator />
 
-        <p className="text-center text-xs text-[#64748B] mt-4">
+        <p className="text-xs text-[#64748B] mt-4">
           Modeled estimates only. Assumptions use published 2025–2026 Ontario
           labor rates and PaintForge engineering targets — not measured field
           results. Pilot deployments will validate these numbers.
@@ -258,7 +254,7 @@ export default function PaintForgeHomepage() {
       <section className="bg-[#0A2540] py-16 text-white">
         <div className="max-w-6xl mx-auto px-6">
           <div className="mb-10">
-            <div className="text-[#FF6B35] text-sm font-semibold tracking-[2px] mb-3">
+            <div className="kicker mb-3">
               2026 PILOT PROGRAM
             </div>
             <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">
@@ -312,12 +308,14 @@ export default function PaintForgeHomepage() {
       <section id="technology" className="max-w-7xl mx-auto px-6 py-20">
         <div className="grid lg:grid-cols-2 gap-x-16 gap-y-12 items-center">
           <div>
-            <div className="text-[#FF6B35] text-sm font-semibold tracking-[2px] mb-3">
-              ONE PLATFORM. EVERY TRADE.
+            <div className="section-header mb-8">
+              <div className="kicker mb-3">
+                ONE PLATFORM. EVERY TRADE.
+              </div>
+              <h2 className="section-heading">
+                The Shared Interior Finishing Stack
+              </h2>
             </div>
-            <h2 className="section-heading mb-6">
-              The Shared Interior Finishing Stack
-            </h2>
             <p className="text-xl text-[#475569]">
               PaintForge is the first product on a shared mobile-base platform.
               The long-term thesis: one base, one operator training program, one
@@ -342,7 +340,7 @@ export default function PaintForgeHomepage() {
           </div>
 
           <div className="bg-[#F8FAFC] rounded-3xl p-9 border border-[#E2E8F0]">
-            <div className="uppercase text-xs tracking-[1.5px] font-semibold text-[#FF6B35] mb-4">
+            <div className="kicker mb-4">
               INTERIORFINISH OS — PLANNED CAPABILITIES
             </div>
             <ul className="space-y-4 text-sm">
@@ -378,7 +376,7 @@ export default function PaintForgeHomepage() {
       {/* PRICING TEASER */}
       <section className="bg-[#F8FAFC] py-16 border-y">
         <div className="max-w-6xl mx-auto px-6 section-header">
-          <div className="text-[#FF6B35] text-sm font-semibold tracking-[2px] mb-3">
+          <div className="kicker mb-3">
             PLANNED RAAS PRICING
           </div>
           <h2 className="section-heading mb-4">
@@ -396,45 +394,37 @@ export default function PaintForgeHomepage() {
         </div>
       </section>
 
-      {/* FINAL CTA */}
-      <section className="bg-[#0A2540] py-20 text-white text-center">
-        <div className="max-w-3xl mx-auto px-6">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-[-0.04em] leading-tight mb-6">
-            Help define how
-            <br />
-            interiors get painted.
-          </h2>
-          <p className="text-lg sm:text-xl md:text-2xl text-white/70 mb-9">
-            The 2026 pilot cohort is small by design. If painter shortages are
-            costing you schedule or margin, talk to us.
-          </p>
+      {/* FINAL CTA + PILOT APPLICATION (popup form) */}
+      <section id="talk-to-expert" className="bg-[#0A2540] py-20 text-white">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="section-header section-header--dark">
+            <div className="kicker mb-3">JOIN THE 2026 COHORT</div>
+            <h2 className="section-heading text-white mb-4">
+              Help define how
+              <br />
+              interiors get painted.
+            </h2>
+            <p className="text-lg sm:text-xl md:text-2xl text-white/70 max-w-2xl mb-9">
+              The 2026 pilot cohort is small by design. If painter shortages
+              are costing you schedule or margin, apply and we will build a
+              custom ROI model for your pipeline together.
+            </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="#talk-to-expert" className="btn-primary text-lg px-10 py-4">
-              Apply for the Pilot
-            </Link>
-            <Link
-              href="/pricing"
-              className="btn-secondary text-lg px-8 py-4 border-white/40 text-white hover:bg-white/10"
-            >
-              See Planned Pricing
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <ApplyCTA />
+              <Link
+                href="/pricing"
+                className="btn-secondary text-lg px-8 py-4 border-white/40 text-white hover:bg-white/10 inline-flex items-center justify-center"
+              >
+                See Planned Pricing
+              </Link>
+            </div>
+            <p className="mt-5 text-sm text-white/50">
+              We reply to every serious inquiry by email, typically within 1–2
+              business days.
+            </p>
           </div>
         </div>
-      </section>
-
-      {/* CONTACT */}
-      <section id="talk-to-expert" className="max-w-2xl mx-auto px-6 py-16">
-        <div className="text-center mb-8">
-          <h3 className="text-3xl font-semibold tracking-tight">
-            Apply as a Design Partner
-          </h3>
-          <p className="text-[#475569] mt-2">
-            Tell us about your upcoming projects and we will build a custom ROI
-            model for your pipeline together.
-          </p>
-        </div>
-        <ContactForm />
       </section>
     </div>
   );

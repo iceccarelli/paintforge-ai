@@ -21,7 +21,7 @@ const jobs = [
 export default function DashboardPreview() {
   return (
     <div className="max-w-6xl mx-auto px-6 py-16">
-      <div className="mb-10">
+      <div className="section-header mb-10">
         <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-[#FFF7ED] border border-[#FF6B35] text-[#FF6B35] text-xs tracking-[2px] font-semibold mb-4">
           PRODUCT PREVIEW — SIMULATED DATA
         </div>

@@ -10,8 +10,8 @@ export const metadata = {
 export default function PricingPage() {
   return (
     <div className="max-w-6xl mx-auto px-6 py-16">
-      <div className="text-center mb-12">
-        <div className="text-[#FF6B35] text-sm font-semibold tracking-[2px] mb-3">
+      <div className="section-header mb-12">
+        <div className="kicker mb-3">
           PLANNED ROBOT-AS-A-SERVICE PRICING
         </div>
         <h1 className="section-heading">
@@ -19,7 +19,7 @@ export default function PricingPage() {
           <br />
           and early production units.
         </h1>
-        <p className="mt-4 text-xl text-[#475569] max-w-2xl mx-auto">
+        <p className="mt-4 text-xl text-[#475569] max-w-2xl">
           These are the price points we are building toward. Nothing is on sale
           yet — founding design partners in the 2026 pilot cohort lock in
           preferred rates before general availability.
@@ -125,7 +125,7 @@ export default function PricingPage() {
       {/* Bundling roadmap */}
       <div className="bg-[#0A2540] text-white rounded-3xl p-10 md:p-12 mb-16">
         <div className="max-w-3xl">
-          <div className="uppercase tracking-[2px] text-xs text-[#FF6B35] mb-2">
+          <div className="kicker mb-2">
             ROADMAP
           </div>
           <h3 className="text-3xl md:text-4xl font-semibold tracking-tight">

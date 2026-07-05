@@ -8,8 +8,8 @@ const CONTACT_EMAIL =
 export default function PrivacyPage() {
   return (
     <div className="max-w-3xl mx-auto px-6 py-16">
-      <h1 className="section-heading mb-2">Privacy Policy</h1>
-      <p className="text-sm text-[#64748B] mb-10">Last updated: July 2026</p>
+      <div className="section-header mb-10"><h1 className="section-heading mb-2">Privacy Policy</h1>
+      <p className="text-sm text-[#64748B]">Last updated: July 2026</p></div>
 
       <div className="space-y-8 text-[15px] leading-relaxed text-[#475569]">
         <section>

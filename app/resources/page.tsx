@@ -9,8 +9,8 @@ export const metadata = {
 export default function ResourcesPage() {
   return (
     <div className="max-w-4xl mx-auto px-6 py-16">
-      <div className="mb-12">
-        <div className="text-[#FF6B35] text-sm font-semibold tracking-[2px]">
+      <div className="section-header mb-12">
+        <div className="kicker">
           RESOURCES
         </div>
         <h1 className="section-heading">

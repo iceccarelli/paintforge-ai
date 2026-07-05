@@ -10,8 +10,8 @@ export const metadata = {
 export default function SolutionsPage() {
   return (
     <div className="max-w-6xl mx-auto px-6 py-16">
-      <div className="text-center mb-14">
-        <div className="text-[#FF6B35] text-sm font-semibold tracking-[2px]">
+      <div className="section-header mb-14">
+        <div className="kicker">
           SOLUTIONS BY SEGMENT
         </div>
         <h1 className="section-heading mt-3">
@@ -19,7 +19,7 @@ export default function SolutionsPage() {
           <br />
           who win work by finishing first.
         </h1>
-        <p className="mt-4 text-lg text-[#475569] max-w-2xl mx-auto">
+        <p className="mt-4 text-lg text-[#475569] max-w-2xl">
           PaintForge is in development. Here is who we are designing it for,
           and the outcomes the platform is engineered to deliver.
         </p>
@@ -83,7 +83,7 @@ export default function SolutionsPage() {
         ))}
       </div>
 
-      <div className="mt-14 text-center">
+      <div className="mt-14">
         <Link href="/#talk-to-expert" className="btn-primary px-10 py-4">
           Apply for the 2026 GTA pilot program
         </Link>

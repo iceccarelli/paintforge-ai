@@ -485,3 +485,30 @@ footer a[aria-label]:hover { text-decoration: none; }
   margin-bottom: 0.4rem;
   letter-spacing: 0.01em;
 }
+
+/* ---------------------------------------------------------------------------
+   Unified design system: one kicker, one header treatment, everywhere
+   --------------------------------------------------------------------------- */
+.kicker {
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* Accent rule works on dark sections too */
+.section-header--dark { border-left-color: var(--accent); }
+.section-header--dark .section-heading { color: #ffffff; }
+
+/* Modal entrances */
+@keyframes backdropIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes dialogIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-backdrop-in { animation: backdropIn 0.18s ease-out both; }
+.animate-dialog-in   { animation: dialogIn 0.22s cubic-bezier(0.32, 0.72, 0, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-backdrop-in, .animate-dialog-in { animation: none; }
+}
