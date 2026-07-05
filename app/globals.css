@@ -380,3 +380,69 @@ button:active, a:active {
   .chat-launcher-breathe { animation: none; }
   .chat-launcher-ring { display: none; }
 }
+
+/* ---------------------------------------------------------------------------
+   AWS-grade "alive" interaction system
+   --------------------------------------------------------------------------- */
+
+/* Smooth in-page scrolling (anchors, Back to top) */
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+/* Nav links: animated accent underline sliding in from the left */
+.nav-link { position: relative; }
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 2px;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.nav-link:hover::after { transform: scaleX(1); }
+
+/* Dropdown & mobile menu items: background sweep + indent on hover */
+.menu-item {
+  transition: background-color 0.15s ease, padding-left 0.15s ease;
+}
+.menu-item:hover {
+  background-color: #f8fafc;
+  padding-left: 1.5rem;
+}
+
+/* Cards: existing lift, plus a live accent border on hover */
+.card:hover { border-color: rgba(255, 107, 53, 0.45); }
+
+/* Footer links: AWS-style underline with breathing room */
+footer a {
+  text-underline-offset: 4px;
+  text-decoration-color: transparent;
+  transition: color 0.15s ease, text-decoration-color 0.15s ease;
+}
+footer a:hover {
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, 0.6);
+}
+
+/* Mobile menu entrance */
+@keyframes menuIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-menu-in { animation: menuIn 0.18s ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-menu-in { animation: none; }
+}
+
+/* Anchored sections stop below the fixed header instead of underneath it */
+[id] { scroll-margin-top: 112px; }
+
+/* Icon-only links (socials) keep their scale effect, never an underline */
+footer a[aria-label]:hover { text-decoration: none; }
