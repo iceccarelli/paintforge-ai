@@ -164,8 +164,14 @@ export function Navbar() {
               ))}
             </div>
 
-            {/* Right side CTA */}
-            <div className="hidden lg:flex items-center gap-3">
+            {/* Right side: sign-in + CTA (AWS pattern) */}
+            <div className="hidden lg:flex items-center gap-5">
+              <Link
+                href="/console"
+                className="nav-link text-sm font-medium text-[#475569] hover:text-[#0A2540] transition-colors py-2"
+              >
+                Sign in to console
+              </Link>
               <Link
                 href="/#talk-to-expert"
                 className="btn-primary text-sm px-6 py-2.5 shadow-sm"
@@ -214,6 +220,13 @@ export function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Apply for the Pilot
+              </Link>
+              <Link
+                href="/console"
+                className="btn-secondary text-center py-4"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Sign in to console
               </Link>
               <a
                 href={`mailto:${CONTACT_EMAIL}`}

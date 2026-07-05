@@ -66,42 +66,72 @@ export function ContactForm() {
   return (
     <form className="card p-8 space-y-5" onSubmit={handleSubmit}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <input
-          type="text"
-          name="name"
-          placeholder="Full Name"
-          className="form-input"
-          required
-        />
-        <input
-          type="email"
-          name="email"
-          placeholder="Work Email"
-          className="form-input"
-          required
-        />
+        <div>
+          <label htmlFor="cf-name" className="form-label">
+            Full name
+          </label>
+          <input
+            id="cf-name"
+            type="text"
+            name="name"
+            placeholder="Jane Doe"
+            className="form-input"
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="cf-email" className="form-label">
+            Work email
+          </label>
+          <input
+            id="cf-email"
+            type="email"
+            name="email"
+            placeholder="jane@yourcompany.ca"
+            className="form-input"
+            required
+          />
+        </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <input
-          type="tel"
-          name="phone"
-          placeholder="Phone Number (optional)"
-          className="form-input"
-        />
-        <input
-          type="text"
-          name="company"
-          placeholder="Company / GC Name"
-          className="form-input"
+        <div>
+          <label htmlFor="cf-phone" className="form-label">
+            Phone <span className="text-[#94A3B8] font-normal">— optional</span>
+          </label>
+          <input
+            id="cf-phone"
+            type="tel"
+            name="phone"
+            placeholder="(416) 555-0100"
+            className="form-input"
+          />
+        </div>
+        <div>
+          <label htmlFor="cf-company" className="form-label">
+            Company / GC name
+          </label>
+          <input
+            id="cf-company"
+            type="text"
+            name="company"
+            placeholder="Your company"
+            className="form-input"
+            required
+          />
+        </div>
+      </div>
+      <div>
+        <label htmlFor="cf-message" className="form-label">
+          Your upcoming projects
+        </label>
+        <textarea
+          id="cf-message"
+          name="message"
+          placeholder="Sqft, timelines, current painting challenges..."
+          className="form-input min-h-[110px] resize-y"
           required
         />
       </div>
-      <textarea
-        name="message"
-        placeholder="Tell us about your upcoming projects (sqft, timelines, current painting challenges...)"
-        className="form-input min-h-[110px] resize-y"
-        required
-      />
 
       <button
         type="submit"

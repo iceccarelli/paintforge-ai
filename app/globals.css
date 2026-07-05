@@ -446,3 +446,42 @@ footer a:hover {
 
 /* Icon-only links (socials) keep their scale effect, never an underline */
 footer a[aria-label]:hover { text-decoration: none; }
+
+/* ---------------------------------------------------------------------------
+   Tesla x AWS layout language
+   --------------------------------------------------------------------------- */
+
+/* Left-aligned section headers with an accent rule (AWS pattern) */
+.section-header {
+  text-align: left;
+  border-left: 3px solid var(--accent);
+  padding-left: 1.25rem;
+}
+.section-header .section-heading { margin-left: 0; }
+
+/* Tesla scroll cue: gentle bounce */
+@keyframes scrollCue {
+  0%, 100% { transform: translate(-50%, 0); opacity: 0.6; }
+  50%      { transform: translate(-50%, 7px); opacity: 1; }
+}
+.animate-scroll-cue {
+  animation: scrollCue 2.2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-scroll-cue { animation: none; }
+}
+
+/* AWS "Learn more" arrows slide on hover */
+.learn-more:hover svg { transform: translateX(3px); }
+.learn-more { text-underline-offset: 4px; }
+.learn-more:hover { text-decoration: underline; }
+
+/* Form labels (AWS console style) */
+.form-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #0a2540;
+  margin-bottom: 0.4rem;
+  letter-spacing: 0.01em;
+}

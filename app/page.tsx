@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {
   ArrowRight,
+  ChevronDown,
   Check,
   Zap,
   Target,
@@ -17,7 +18,7 @@ export default function PaintForgeHomepage() {
   return (
     <div className="overflow-hidden">
       {/* HERO — Ken Burns image reel behind, randomized per visit */}
-      <section id="top" className="relative pt-20 pb-24 bg-[#0A2540] text-white">
+      <section id="top" className="relative min-h-[88vh] flex items-center py-20 bg-[#0A2540] text-white">
         <HeroReel />
         <div className="relative max-w-5xl mx-auto px-6 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-white/10 text-xs tracking-[2px] font-medium mb-6">
@@ -59,6 +60,13 @@ export default function PaintForgeHomepage() {
           </p>
         </div>
 
+        <a
+          href="#features"
+          aria-label="Scroll to features"
+          className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/60 hover:text-white transition-colors animate-scroll-cue"
+        >
+          <ChevronDown size={28} />
+        </a>
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[900px] h-[2px] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
       </section>
 
@@ -91,7 +99,7 @@ export default function PaintForgeHomepage() {
 
       {/* FEATURES */}
       <section id="features" className="max-w-7xl mx-auto px-6 pt-20 pb-16">
-        <div className="text-center mb-12">
+        <div className="section-header mb-12">
           <div className="text-[#FF6B35] text-sm font-semibold tracking-[2px] mb-3">
             WHAT WE ARE BUILDING
           </div>
@@ -107,42 +115,57 @@ export default function PaintForgeHomepage() {
             {
               icon: Zap,
               title: "Large-Field Airless Spraying",
+              href: "/#how-it-works",
               desc: "Industrial airless spray systems designed for 1,000+ sqft per coat per day, with consistent pressure control on primer, base, and finish coats.",
             },
             {
               icon: Target,
               title: "Dynamic Spray Path Optimization",
+              href: "/resources#targets",
               desc: "Vision-guided path planning designed to minimize overspray, eliminate holidays, and hold a ±2 mil thickness target across walls, ceilings, and complex geometry.",
             },
             {
               icon: Shield,
               title: "Closed-Loop Mil Thickness",
+              href: "/resources#targets",
               desc: "Real-time thickness sensing with closed-loop flow control, so every square foot is applied to spec instead of eyeballed — the core of our quality thesis.",
             },
             {
               icon: Users,
               title: "Back-Rolling & Edge Detailing",
+              href: "/#technology",
               desc: "A planned secondary roller attachment for texture matching, with servo-gun control for reveals, corners, and architectural details.",
             },
             {
               icon: Clock,
               title: "Multi-Coat Scheduling",
+              href: "/dashboard",
               desc: "Designed to sequence primer → base → topcoat with dry times driven by measured humidity and temperature, not guesswork.",
             },
             {
               icon: Award,
               title: "One Shared Platform",
+              href: "/#technology",
               desc: "PaintForge is designed as the first end-effector on a shared mobile-base platform, so future finishing tools run on the same base, OS, and operator training.",
             },
           ].map((feature, index) => (
-            <div key={index} className="card p-8 group">
+            <div key={index} className="card p-8 group flex flex-col">
               <div className="feature-icon mb-6 group-hover:scale-105 transition-transform">
                 <feature.icon className="w-6 h-6" />
               </div>
               <h3 className="font-semibold text-xl tracking-tight mb-3">
                 {feature.title}
               </h3>
-              <p className="text-[#475569] leading-relaxed">{feature.desc}</p>
+              <p className="text-[#475569] leading-relaxed flex-1">
+                {feature.desc}
+              </p>
+              <Link
+                href={feature.href}
+                className="learn-more mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#FF6B35]"
+              >
+                Learn more{" "}
+                <ArrowRight className="w-4 h-4 transition-transform" />
+              </Link>
             </div>
           ))}
         </div>
@@ -151,7 +174,7 @@ export default function PaintForgeHomepage() {
       {/* HOW IT WORKS */}
       <section id="how-it-works" className="bg-[#F8FAFC] py-16 border-y">
         <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-12">
+          <div className="section-header mb-12">
             <div className="text-[#FF6B35] text-sm font-semibold tracking-[2px] mb-3">
               THE PLANNED WORKFLOW
             </div>
@@ -211,7 +234,7 @@ export default function PaintForgeHomepage() {
 
       {/* ROI MODEL */}
       <section className="max-w-7xl mx-auto px-6 py-20">
-        <div className="text-center mb-10">
+        <div className="section-header mb-10">
           <div className="text-[#FF6B35] text-sm font-semibold tracking-[2px] mb-3">
             MODEL THE ECONOMICS
           </div>
@@ -354,14 +377,14 @@ export default function PaintForgeHomepage() {
 
       {/* PRICING TEASER */}
       <section className="bg-[#F8FAFC] py-16 border-y">
-        <div className="max-w-6xl mx-auto px-6 text-center">
+        <div className="max-w-6xl mx-auto px-6 section-header">
           <div className="text-[#FF6B35] text-sm font-semibold tracking-[2px] mb-3">
             PLANNED RAAS PRICING
           </div>
           <h2 className="section-heading mb-4">
             Robot as a Service. No capex.
           </h2>
-          <p className="text-xl text-[#475569] max-w-xl mx-auto">
+          <p className="text-xl text-[#475569] max-w-xl">
             Target pricing for pilot and early production units. Founding
             design partners lock in preferred rates.
           </p>
