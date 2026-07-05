@@ -117,13 +117,13 @@ export default function PaintForgeHomepage() {
             {
               icon: Target,
               title: "Dynamic Spray Path Optimization",
-              href: "/resources#targets",
+              href: "/technology#autonomy",
               desc: "Vision-guided path planning designed to minimize overspray, eliminate holidays, and hold a ±2 mil thickness target across walls, ceilings, and complex geometry.",
             },
             {
               icon: Shield,
               title: "Closed-Loop Mil Thickness",
-              href: "/resources#targets",
+              href: "/technology#closed-loop",
               desc: "Real-time thickness sensing with closed-loop flow control, so every square foot is applied to spec instead of eyeballed — the core of our quality thesis.",
             },
             {
@@ -370,6 +370,32 @@ export default function PaintForgeHomepage() {
               what gets built first.
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* MARKET VALIDATION + DIFFERENTIATION */}
+      <section className="max-w-7xl mx-auto px-6 py-16">
+        <div className="section-header mb-10">
+          <div className="kicker mb-3">A VALIDATED MARKET</div>
+          <h2 className="section-heading">
+            Robotic painting works.
+            <br />
+            Verified robotic painting wins.
+          </h2>
+          <p className="mt-4 text-lg text-[#475569] max-w-3xl">
+            Funded ventures in the US and Europe have already painted millions
+            of square feet with robots — as a service, and as rentals. The
+            category is proven. Our wedge: the deliverable includes the
+            evidence — a sensor-verified thickness record for every square
+            foot, ready for inspector sign-off.
+          </p>
+          <Link
+            href="/technology"
+            className="learn-more mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#FF6B35]"
+          >
+            Read the technology &amp; research thesis{" "}
+            <ArrowRight className="w-4 h-4 transition-transform" />
+          </Link>
         </div>
       </section>
 

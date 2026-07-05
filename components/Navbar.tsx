@@ -49,6 +49,7 @@ export function Navbar() {
 
   const navLinks = [
     { href: "/#features", label: "Platform" },
+    { href: "/technology", label: "Technology" },
     { href: "/solutions", label: "Solutions" },
     { href: "/pricing", label: "Pricing" },
     { href: "/resources", label: "Resources" },

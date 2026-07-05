@@ -39,6 +39,7 @@ const columns: { title: string; links: { href: string; label: string }[] }[] = [
     links: [
       { href: "/#features", label: "What Is PaintForge?" },
       { href: "/#how-it-works", label: "How It Works" },
+      { href: "/technology", label: "Technology & Research" },
       { href: "/resources#targets", label: "Engineering Targets" },
       { href: "/resources#methodology", label: "ROI Methodology" },
       { href: "/resources#case-studies", label: "Case Studies" },
@@ -50,7 +51,7 @@ const columns: { title: string; links: { href: string; label: string }[] }[] = [
       { href: "/#roi-calculator", label: "ROI Model" },
       { href: "/pricing", label: "Planned RaaS Pricing" },
       { href: "/dashboard", label: "Product Preview" },
-      { href: "/#technology", label: "Technology Stack" },
+      { href: "/technology", label: "Technology & Research" },
     ],
   },
   {
