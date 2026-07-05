@@ -1,0 +1,90 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "paintforge-ai"
+version = "0.2.0"
+description = "Simulation, ROI modeling, and coverage path-planning tools for the PaintForge autonomous painting platform. All outputs are engineering targets pending 2026 pilot validation."
+readme = "README.md"
+license = {text = "Proprietary"}
+authors = [
+  {name = "Vince Ceccarelli", email = "vince.ceccarelli@gmail.com"}
+]
+keywords = ["robotics", "painting", "construction", "automation", "simulation", "path-planning", "ROI", "computer-vision", "AI", "interior-finish"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Manufacturing",
+  "Intended Audience :: Science/Research",
+  "License :: Other/Proprietary License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Topic :: Scientific/Engineering :: Visualization",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Operating System :: OS Independent",
+]
+requires-python = ">=3.10"
+dependencies = [
+  "numpy>=1.26.0",
+  "scipy>=1.11.0",
+  "pydantic>=2.9.0",
+  "typer>=0.15.0",
+  "rich>=13.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0.0",
+  "pytest-cov>=5.0.0",
+  "black>=24.0.0",
+  "ruff>=0.8.0",
+  "mypy>=1.13.0",
+  "build>=1.2.0",
+  "twine>=5.0.0",
+]
+viz = ["matplotlib>=3.8.0", "seaborn>=0.13.0"]
+full = ["paintforge-ai[viz]"]
+
+[project.urls]
+Homepage = "https://github.com/iceccarelli/paintforge-ai"
+Documentation = "https://github.com/iceccarelli/paintforge-ai/tree/main/packages/paintforge-sim"
+Repository = "https://github.com/iceccarelli/paintforge-ai"
+Issues = "https://github.com/iceccarelli/paintforge-ai/issues"
+Changelog = "https://github.com/iceccarelli/paintforge-ai/releases"
+
+[project.scripts]
+paintforge = "paintforge_ai.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/paintforge_ai"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.black]
+line-length = 100
+target-version = ['py310']
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "C4"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-ra -q --strict-markers"

@@ -16,6 +16,30 @@ export function ContactForm() {
     const form = e.currentTarget;
     const data = new FormData(form);
 
+    // [integration] api-first submit
+    // Try our own backend first (Resend via /api/apply). If it isn't
+    // configured (503) or errors, fall through to Formspree/mailto below.
+    try {
+      setSubmitting(true);
+      const apiRes = await fetch("/api/apply", { method: "POST", body: data });
+      if (apiRes.ok) {
+        setSent(true);
+        form.reset();
+        toast.success("Thanks — we received your inquiry and will reply by email.");
+        setSubmitting(false);
+        return;
+      }
+      if (apiRes.status === 429) {
+        toast.error("Too many submissions — please try again later.");
+        setSubmitting(false);
+        return;
+      }
+    } catch {
+      // network error: fall through to the fallback path
+    } finally {
+      setSubmitting(false);
+    }
+
     if (!FORMSPREE_ID) {
       // No form backend configured yet — fall back to a pre-filled email.
       const subject = encodeURIComponent(
