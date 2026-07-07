@@ -8,6 +8,8 @@ import { ROBOTS, ROBOTS_DISCLAIMER } from "@/lib/robots";
 import { IntegrationDiagram } from "@/components/IntegrationDiagram";
 import { RobotCellShowcase } from "@/components/RobotCellShowcase";
 import { EcosystemCTA } from "@/components/EcosystemCTA";
+import { EcosystemRibbon } from "@/components/EcosystemRibbon";
+import { PlatformComparison } from "@/components/PlatformComparison";
 
 export const metadata: Metadata = {
   title: "SaaS — The Paint Automation Platform | PaintForge",
@@ -74,6 +76,9 @@ export default function SaaSPage() {
           <p className="mt-4 text-xs text-white/50">Capabilities below are the platform roadmap. Pilot partners help decide what ships first.</p>
         </div>
       </section>
+
+      {/* ECOSYSTEM RIBBON */}
+      <EcosystemRibbon active="saas" />
 
       {/* PROBLEM WITH ROBOTS ALONE */}
       <section className="max-w-7xl mx-auto px-6 py-20">
@@ -191,6 +196,9 @@ export default function SaaSPage() {
           </Link>
         </div>
       </section>
+
+      {/* WHICH DO YOU NEED */}
+      <PlatformComparison />
 
       {/* CROSS-LINK */}
       <EcosystemCTA

@@ -5,6 +5,8 @@ import { ROBOTS, ROBOTS_DISCLAIMER, NICHE_PROBLEMS } from "@/lib/robots";
 import { RobotCard } from "@/components/RobotCard";
 import { RobotCellShowcase } from "@/components/RobotCellShowcase";
 import { EcosystemCTA } from "@/components/EcosystemCTA";
+import { EcosystemRibbon } from "@/components/EcosystemRibbon";
+import { PlatformComparison } from "@/components/PlatformComparison";
 import { ApplyCTA } from "@/components/ApplyModal";
 
 export const metadata: Metadata = {
@@ -54,6 +56,9 @@ export default function RaaSPage() {
           </p>
         </div>
       </section>
+
+      {/* ECOSYSTEM RIBBON */}
+      <EcosystemRibbon active="raas" />
 
       {/* PROBLEM → SOLUTION */}
       <section className="max-w-7xl mx-auto px-6 py-20">
@@ -146,6 +151,9 @@ export default function RaaSPage() {
           </div>
         </div>
       </section>
+
+      {/* WHICH DO YOU NEED */}
+      <PlatformComparison />
 
       {/* CROSS-LINK */}
       <EcosystemCTA
