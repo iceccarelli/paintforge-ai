@@ -152,9 +152,7 @@ export function RobotCellShowcase() {
       </div>
 
       <p className="text-[11px] text-[#64748B] px-6 py-3 border-t border-[#E2E8F0] bg-[#F8FAFC]">
-        Concept simulation. Stylized generic 6-axis arms — proportions vary by the
-        selected robot’s class, but these are not authorized vendor models, not a
-        specific product, and not a live robot feed. Specs are from each
+        Concept simulation. Each robot is a distinct, class-accurate build — its own base, proportions, wrist, and applicator matching that machine’s real configuration. These are stylized representations, not authorized vendor models, not a specific product, and not a live robot feed. Specs are from each
         manufacturer’s public documentation.
       </p>
     </div>
