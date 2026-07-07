@@ -222,7 +222,7 @@ export function Chatbot() {
               </button>
             </div>
 
-            <div className="text-center text-[10px] text-[#94A3B8] pb-3">Scripted demo assistant. For real answers, apply via the pilot form \u2014 we reply by email.</div>
+            <div className="text-center text-[10px] text-[#94A3B8] pb-3">Scripted demo assistant. For real answers, apply via the pilot form — we reply by email.</div>
           </motion.div>
         )}
       </AnimatePresence>

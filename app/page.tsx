@@ -13,6 +13,7 @@ import {
 import { ROICalculator } from "@/components/ROICalculator";
 import { HeroReel } from "@/components/HeroReel";
 import { ApplyCTA } from "@/components/ApplyModal";
+import { FAQ } from "@/components/FAQ";
 
 export default function PaintForgeHomepage() {
   return (
@@ -419,6 +420,9 @@ export default function PaintForgeHomepage() {
           </div>
         </div>
       </section>
+
+      {/* FAQ — objection handling immediately before the ask */}
+      <FAQ />
 
       {/* FINAL CTA + PILOT APPLICATION (popup form) */}
       <section id="talk-to-expert" className="bg-[#0A2540] py-20 text-white">

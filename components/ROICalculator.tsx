@@ -124,6 +124,8 @@ export function ROICalculator() {
               type="range" min="15000" max="350000" step="5000" 
               value={sqft} onChange={(e) => setSqft(parseInt(e.target.value))}
               className="w-full accent-[#FF6B35]"
+              aria-label="Total wall and ceiling area in square feet"
+              aria-valuetext={`${sqft.toLocaleString()} square feet`}
             />
             <div className="flex justify-between text-xs text-[#64748B] mt-1">
               <span>15,000</span>
@@ -179,7 +181,7 @@ export function ROICalculator() {
               className="w-4 h-4 accent-[#FF6B35]"
             />
             <label htmlFor="bundle" className="text-sm font-medium cursor-pointer">
-              Model planned platform bundle discount (18% \u2014 roadmap pricing)
+              Model planned platform bundle discount (18% — roadmap pricing)
             </label>
           </div>
         </div>
@@ -249,7 +251,7 @@ export function ROICalculator() {
             </div>
 
             <div className="mt-6 pt-5 border-t text-xs text-[#475569] flex items-center justify-between">
-              <div>Modeled estimate: published Ontario 2025\u20132026 labor rates + PaintForge engineering targets. Not measured field results.</div>
+              <div>Modeled estimate: published Ontario 2025–2026 labor rates + PaintForge engineering targets. Not measured field results.</div>
               <button 
                 onClick={() => window.location.href = '/pricing'}
                 className="text-[#FF6B35] font-semibold hover:underline flex items-center gap-1"
