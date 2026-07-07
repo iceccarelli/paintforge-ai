@@ -51,6 +51,8 @@ export function Navbar() {
     { href: "/#features", label: "Platform" },
     { href: "/technology", label: "Technology" },
     { href: "/solutions", label: "Solutions" },
+    { href: "/raas", label: "RaaS" },
+    { href: "/saas", label: "SaaS" },
     { href: "/pricing", label: "Pricing" },
     { href: "/resources", label: "Resources" },
     { href: "/dashboard", label: "Product Preview" },

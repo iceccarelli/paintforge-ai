@@ -48,6 +48,8 @@ const columns: { title: string; links: { href: string; label: string }[] }[] = [
   {
     title: "Product",
     links: [
+      { href: "/raas", label: "Robotics as a Service" },
+      { href: "/saas", label: "Software Platform" },
       { href: "/#roi-calculator", label: "ROI Model" },
       { href: "/pricing", label: "Planned RaaS Pricing" },
       { href: "/dashboard", label: "Product Preview" },
