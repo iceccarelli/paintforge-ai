@@ -31,6 +31,8 @@ export interface Robot {
   solution: string;
   /** What a vendor-neutral software layer would add on top. */
   softwareAngle: string;
+  /** Stylized 3D params for the concept simulator (not vendor livery). */
+  viz: { reach: number; thick: number; accent: string };
 }
 
 export const ROBOTS: Robot[] = [
@@ -54,6 +56,7 @@ export const ROBOTS: Robot[] = [
       "Pumps sit ~15 cm from the wrist and the IRC5P unifies motion and process control, so color changes waste less and two units can cover what previously took four.",
     softwareAngle:
       "Normalize its IRC5P job and consumption data into one fleet view alongside every other vendor.",
+    viz: { reach: 1.12, thick: 1.05, accent: "#E4002B" },
   },
   {
     id: "fanuc-p-250ib",
@@ -75,6 +78,7 @@ export const ROBOTS: Robot[] = [
       "A 2,800 mm reach, patented hollow wrist for clean hose routing, and one of the largest service/spares networks in North America keep the line predictable.",
     softwareAngle:
       "Version-control offline-generated paths and A/B-compare them centrally instead of on the pendant.",
+    viz: { reach: 1.10, thick: 1.05, accent: "#F2B705" },
   },
   {
     id: "yaskawa-mpx3500",
@@ -96,6 +100,7 @@ export const ROBOTS: Robot[] = [
       "A 70 mm hollow wrist carries large rotary bells for tricky geometry, and the DX200-FM speaks EtherNet/IP, PROFINET, and EtherCAT out of the box.",
     softwareAngle:
       "Its open fieldbus is a clean tap point for live process telemetry into cloud analytics.",
+    viz: { reach: 1.06, thick: 1.0, accent: "#1E5BFF" },
   },
   {
     id: "kawasaki-kj264",
@@ -117,6 +122,7 @@ export const ROBOTS: Robot[] = [
       "A 3R hollow wrist routes hoses internally and mounts equipment on the upper arm, cutting contamination while keeping a slim, wide motion range.",
     softwareAngle:
       "Feed its reject/defect capture into the same quality dataset as every other line.",
+    viz: { reach: 1.04, thick: 1.0, accent: "#17A2A2" },
   },
   {
     id: "kuka-ready2-spray",
@@ -138,6 +144,7 @@ export const ROBOTS: Robot[] = [
       "A pre-configured, pre-tested cell with 0.03 mm repeatability lowers the barrier — 1K/2K, high/low pressure, water- or solvent-based on small and medium parts.",
     softwareAngle:
       "Even a packaged cell benefits from centralized recipe management and consumption tracking once several are deployed.",
+    viz: { reach: 0.82, thick: 0.88, accent: "#FF7A1A" },
   },
 ];
 
