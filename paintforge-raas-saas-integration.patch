@@ -1,0 +1,874 @@
+diff --git a/app/raas/page.tsx b/app/raas/page.tsx
+new file mode 100644
+index 0000000..b1a5b49
+--- /dev/null
++++ b/app/raas/page.tsx
+@@ -0,0 +1,190 @@
++import type { Metadata } from "next";
++import Link from "next/link";
++import { Check, ShieldCheck, Wallet, Wrench, ArrowRight, Info } from "lucide-react";
++import { ROBOTS, ROBOTS_DISCLAIMER } from "@/lib/robots";
++import { RobotCard } from "@/components/RobotCard";
++import { EcosystemCTA } from "@/components/EcosystemCTA";
++import { ApplyCTA } from "@/components/ApplyModal";
++
++export const metadata: Metadata = {
++  title: "RaaS — Robotics as a Service | PaintForge",
++  description:
++    "PaintForge's Robotics-as-a-Service model: professional robotic painting delivered without capital expense. Plus the industrial painting-robot landscape our platform is built to orchestrate. GTA-focused, 2026 pilot.",
++  alternates: { canonical: "/raas" },
++  keywords: [
++    "Robotics as a Service Toronto",
++    "Robotic Paint Line RaaS",
++    "industrial painting automation GTA",
++    "paint robot subscription",
++    "RaaS painting robot Ontario",
++  ],
++};
++
++export default function RaaSPage() {
++  return (
++    <div className="overflow-hidden">
++      {/* HERO */}
++      <section className="relative bg-[#0A2540] text-white py-24">
++        <div className="max-w-5xl mx-auto px-6">
++          <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-white/10 text-xs tracking-[2px] font-medium mb-6">
++            ROBOTICS AS A SERVICE • 2026 GTA PILOT
++          </div>
++          <h1 className="text-4xl sm:text-5xl md:text-6xl font-semibold tracking-[-0.04em] leading-[1.05] mb-6">
++            Professional robotic painting,
++            <br />
++            delivered as a service.
++          </h1>
++          <p className="max-w-3xl text-lg sm:text-xl text-white/75 mb-9">
++            RaaS means the precision of industrial paint robotics without the
++            capital expense of owning, programming, and maintaining a cell.
++            PaintForge is building its own painting platform on this model — and
++            designing the software to orchestrate the wider class of
++            professional paint robots that manufacturers already trust.
++          </p>
++          <div className="flex flex-col sm:flex-row gap-4">
++            <ApplyCTA
++              label="Apply for the Pilot"
++              className="btn-primary text-lg px-10 py-4 inline-flex items-center gap-3 group"
++            />
++            <Link
++              href="/saas"
++              className="btn-secondary text-lg px-8 py-4 border-white/30 text-white hover:bg-white/10 inline-flex items-center gap-2 group"
++            >
++              See the software that runs it
++              <ArrowRight className="w-5 h-5 group-hover:translate-x-0.5 transition" />
++            </Link>
++          </div>
++          <p className="mt-4 text-xs text-white/50">
++            PaintForge is pre-launch. RaaS terms below describe the model we are
++            building toward with pilot partners.
++          </p>
++        </div>
++      </section>
++
++      {/* WHAT RAAS INCLUDES */}
++      <section className="max-w-7xl mx-auto px-6 py-20">
++        <div className="section-header mb-12">
++          <div className="kicker mb-3">THE MODEL</div>
++          <h2 className="section-heading">
++            One subscription. The whole cell —
++            <br />
++            not just the arm.
++          </h2>
++        </div>
++        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
++          {[
++            {
++              icon: Wallet,
++              title: "Zero capex",
++              desc: "A predictable monthly rate instead of a six-figure purchase, integration project, and depreciation schedule.",
++            },
++            {
++              icon: Wrench,
++              title: "Deployment & support",
++              desc: "Installation, programming, maintenance, and spares are the service — not a separate line item you staff for.",
++            },
++            {
++              icon: ShieldCheck,
++              title: "Built-in software",
++              desc: "Every deployment is designed to include the PaintForge platform for monitoring, recipes, and reporting.",
++            },
++            {
++              icon: Check,
++              title: "Scale up or down",
++              desc: "Add robots for a big package, release them when it ships. Capacity that follows your pipeline.",
++            },
++          ].map((f, i) => (
++            <div key={i} className="card p-7 flex flex-col">
++              <div className="feature-icon mb-5">
++                <f.icon className="w-6 h-6" />
++              </div>
++              <h3 className="font-semibold text-lg tracking-tight mb-2">
++                {f.title}
++              </h3>
++              <p className="text-[#475569] text-[15px] leading-relaxed">
++                {f.desc}
++              </p>
++            </div>
++          ))}
++        </div>
++      </section>
++
++      {/* PROFESSIONAL ROBOT LANDSCAPE */}
++      <section id="robots" className="bg-[#F8FAFC] py-20 border-y">
++        <div className="max-w-7xl mx-auto px-6">
++          <div className="section-header mb-6">
++            <div className="kicker mb-3">THE PROFESSIONAL LANDSCAPE</div>
++            <h2 className="section-heading">
++              The class of hardware
++              <br />
++              our platform is built to work with.
++            </h2>
++            <p className="mt-4 text-lg text-[#475569] max-w-3xl">
++              Robotic painting is a proven category. These five platforms
++              represent the professional bar for repeatability, explosion
++              safety, and finish quality in automotive and general-industry
++              paint shops — including the automotive, aerospace, heavy-equipment,
++              and metal-fabrication plants across the Toronto GTA and Southern
++              Ontario. PaintForge is designing its orchestration software to
++              speak their languages.
++            </p>
++          </div>
++
++          {/* Honesty / non-affiliation banner */}
++          <div className="flex gap-3 items-start bg-white border border-[#E2E8F0] rounded-xl p-4 mb-10 text-sm text-[#475569]">
++            <Info className="w-5 h-5 text-[#FF6B35] flex-shrink-0 mt-0.5" />
++            <p>{ROBOTS_DISCLAIMER}</p>
++          </div>
++
++          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
++            {ROBOTS.map((robot) => (
++              <RobotCard key={robot.id} robot={robot} />
++            ))}
++          </div>
++        </div>
++      </section>
++
++      {/* WHY RAAS */}
++      <section className="max-w-6xl mx-auto px-6 py-20">
++        <div className="grid lg:grid-cols-2 gap-x-16 gap-y-10 items-start">
++          <div>
++            <div className="section-header mb-6">
++              <div className="kicker mb-3">WHY A SERVICE MODEL</div>
++              <h2 className="section-heading">Precision manual painting can’t repeat.</h2>
++            </div>
++            <p className="text-lg text-[#475569]">
++              The case for robotic painting is consistency: even film build,
++              minimal overspray, clean edge coverage, and a logged record of how
++              every surface was coated. The case for the <em>service</em> model
++              is that most shops don’t want to become robotics integrators to
++              get it.
++            </p>
++          </div>
++          <div className="space-y-5">
++            {[
++              ["Financial", "Convert a capital project into an operating cost that tracks actual usage."],
++              ["Operational", "Skip the hiring, programming, and maintenance burden — those are the service."],
++              ["Risk", "Pilot the technology on real packages before committing to owned hardware."],
++              ["Compliance", "A sensor-verified coating record designed for inspector sign-off is part of the deliverable."],
++            ].map(([k, v]) => (
++              <div key={k} className="flex gap-4">
++                <div className="text-sm font-semibold text-[#FF6B35] w-28 flex-shrink-0 pt-0.5">
++                  {k}
++                </div>
++                <p className="text-[15px] text-[#475569]">{v}</p>
++              </div>
++            ))}
++          </div>
++        </div>
++      </section>
++
++      {/* CROSS-LINK TO SAAS */}
++      <EcosystemCTA
++        kicker="HARDWARE IS HALF THE STORY"
++        heading="Robots are only as good as what directs them."
++        body="Every RaaS deployment is designed to run on the PaintForge software platform — the layer that programs, monitors, and reports on the fleet. Renting robots without it leaves most of the value on the table."
++        crossLink={{ href: "/saas", label: "Explore the software platform" }}
++      />
++    </div>
++  );
++}
+diff --git a/app/saas/page.tsx b/app/saas/page.tsx
+new file mode 100644
+index 0000000..5968aa2
+--- /dev/null
++++ b/app/saas/page.tsx
+@@ -0,0 +1,242 @@
++import type { Metadata } from "next";
++import Link from "next/link";
++import {
++  Boxes,
++  Route,
++  Activity,
++  ScanEye,
++  Gauge,
++  FlaskConical,
++  Plug,
++  Lock,
++  ArrowRight,
++  Info,
++} from "lucide-react";
++import { ROBOTS, ROBOTS_DISCLAIMER } from "@/lib/robots";
++import { IntegrationDiagram } from "@/components/IntegrationDiagram";
++import { EcosystemCTA } from "@/components/EcosystemCTA";
++
++export const metadata: Metadata = {
++  title: "SaaS — The Paint Automation Platform | PaintForge",
++  description:
++    "PaintForge's planned software platform for professional paint robotics: fleet orchestration, offline programming, digital twin, AI vision inspection, predictive maintenance, and MES/ERP integration. Designed to run the RaaS fleet.",
++  alternates: { canonical: "/saas" },
++  keywords: [
++    "Paint Robot SaaS",
++    "paint automation software",
++    "robotic painting fleet management",
++    "digital twin paint shop",
++    "industrial painting automation GTA",
++  ],
++};
++
++const FEATURES = [
++  {
++    icon: Route,
++    title: "AI-assisted programming & path optimization",
++    desc: "From no-code recipe setup to expert offline programming, with coverage and overspray prediction before a robot moves.",
++  },
++  {
++    icon: Boxes,
++    title: "Mixed-fleet orchestration",
++    desc: "One control plane designed to schedule and monitor robots from different vendors as a single fleet.",
++  },
++  {
++    icon: Activity,
++    title: "Real-time monitoring & digital twin",
++    desc: "Live pressure, flow, film thickness, temp, and humidity, mirrored to a twin for playback and what-if planning.",
++  },
++  {
++    icon: ScanEye,
++    title: "AI vision quality inspection",
++    desc: "Camera-based defect detection (runs, sags, holidays, orange peel) with a per-part pass/fail record.",
++  },
++  {
++    icon: Gauge,
++    title: "Predictive maintenance & analytics",
++    desc: "Trend wear, pump cycles, and consumption to flag service before an unplanned stop — plus OEE and traceability.",
++  },
++  {
++    icon: FlaskConical,
++    title: "Recipe & process management",
++    desc: "Versioned coating recipes with rollback, so a proven process is reproducible across shifts and sites.",
++  },
++  {
++    icon: Plug,
++    title: "MES / ERP / SCADA integration",
++    desc: "Designed around open interfaces — OPC-UA, MQTT, REST, EtherNet/IP, PROFINET — to fit existing plant systems.",
++  },
++  {
++    icon: Lock,
++    title: "Security, edge + cloud hybrid",
++    desc: "Edge buffering keeps a booth running if the link drops; role-based access and audit logging by design.",
++  },
++];
++
++export default function SaaSPage() {
++  return (
++    <div className="overflow-hidden">
++      {/* HERO */}
++      <section className="relative bg-[#0A2540] text-white py-24">
++        <div className="max-w-5xl mx-auto px-6">
++          <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-white/10 text-xs tracking-[2px] font-medium mb-6">
++            INTERIORFINISH OS • PLATFORM IN DEVELOPMENT
++          </div>
++          <h1 className="text-4xl sm:text-5xl md:text-6xl font-semibold tracking-[-0.04em] leading-[1.05] mb-6">
++            The intelligent operating
++            <br />
++            system for paint robotics.
++          </h1>
++          <p className="max-w-3xl text-lg sm:text-xl text-white/75 mb-9">
++            Hardware sprays; software decides. PaintForge is building the layer
++            that programs, monitors, optimizes, and reports on a painting
++            fleet — turning individual robots into one connected, accountable
++            system. It is designed to ship with every RaaS deployment.
++          </p>
++          <div className="flex flex-col sm:flex-row gap-4">
++            <Link
++              href="/console"
++              className="btn-primary text-lg px-10 py-4 inline-flex items-center gap-3 group"
++            >
++              Request console access
++              <ArrowRight className="w-5 h-5 group-hover:translate-x-0.5 transition" />
++            </Link>
++            <Link
++              href="/raas"
++              className="btn-secondary text-lg px-8 py-4 border-white/30 text-white hover:bg-white/10 inline-flex items-center gap-2 group"
++            >
++              Deploy it on the RaaS fleet
++              <ArrowRight className="w-5 h-5 group-hover:translate-x-0.5 transition" />
++            </Link>
++          </div>
++          <p className="mt-4 text-xs text-white/50">
++            Capabilities below are the platform roadmap. Pilot partners help
++            decide what ships first.
++          </p>
++        </div>
++      </section>
++
++      {/* CORE FEATURES */}
++      <section className="max-w-7xl mx-auto px-6 py-20">
++        <div className="section-header mb-12">
++          <div className="kicker mb-3">PLATFORM CAPABILITIES</div>
++          <h2 className="section-heading">
++            Everything a paint fleet needs
++            <br />
++            to run itself — accountably.
++          </h2>
++        </div>
++        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
++          {FEATURES.map((f, i) => (
++            <div key={i} className="card p-7 flex flex-col">
++              <div className="feature-icon mb-5">
++                <f.icon className="w-6 h-6" />
++              </div>
++              <h3 className="font-semibold text-lg tracking-tight mb-2">
++                {f.title}
++              </h3>
++              <p className="text-[#475569] text-[15px] leading-relaxed">
++                {f.desc}
++              </p>
++            </div>
++          ))}
++        </div>
++      </section>
++
++      {/* EXECUTION STACK */}
++      <section id="stack" className="bg-[#F8FAFC] py-20 border-y">
++        <div className="max-w-5xl mx-auto px-6">
++          <div className="section-header mb-10">
++            <div className="kicker mb-3">EXECUTION STACK & HARDWARE INTEGRATION</div>
++            <h2 className="section-heading">
++              From robot controller to cloud,
++              <br />
++              one accountable path.
++            </h2>
++            <p className="mt-4 text-lg text-[#475569] max-w-3xl">
++              Serious paint automation lives or dies on integration. This is the
++              layered architecture PaintForge is building — a vendor-neutral
++              orchestration layer that sits above each robot’s native controller
++              and below the analytics operators actually use.
++            </p>
++          </div>
++          <IntegrationDiagram />
++        </div>
++      </section>
++
++      {/* COMPATIBILITY */}
++      <section id="compatibility" className="max-w-6xl mx-auto px-6 py-20">
++        <div className="section-header mb-6">
++          <div className="kicker mb-3">DESIGNED-FOR COMPATIBILITY</div>
++          <h2 className="section-heading">
++            Built to speak every controller’s language.
++          </h2>
++          <p className="mt-4 text-lg text-[#475569] max-w-3xl">
++            The platform’s job model is vendor-neutral by design. Here is how it
++            is intended to add value on each of the professional paint platforms
++            in the market.
++          </p>
++        </div>
++
++        <div className="flex gap-3 items-start bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-4 mb-8 text-sm text-[#475569]">
++          <Info className="w-5 h-5 text-[#FF6B35] flex-shrink-0 mt-0.5" />
++          <p>{ROBOTS_DISCLAIMER}</p>
++        </div>
++
++        <div className="divide-y divide-[#E2E8F0] border-y border-[#E2E8F0]">
++          {ROBOTS.map((r) => (
++            <div
++              key={r.id}
++              className="py-5 grid md:grid-cols-[220px_1fr] gap-2 md:gap-8 items-start"
++            >
++              <div>
++                <div className="text-xs font-mono tracking-widest uppercase text-[#FF6B35]">
++                  {r.manufacturer}
++                </div>
++                <div className="font-semibold text-[#0A2540]">{r.model}</div>
++                <Link
++                  href={`/raas#${r.id}`}
++                  className="learn-more text-xs font-semibold text-[#FF6B35] inline-flex items-center gap-1 mt-1"
++                >
++                  Specs on RaaS
++                  <ArrowRight className="w-3 h-3 transition-transform" />
++                </Link>
++              </div>
++              <p className="text-[15px] text-[#475569]">{r.softwareAngle}</p>
++            </div>
++          ))}
++        </div>
++
++        {/* Pricing teaser */}
++        <div className="mt-12 bg-[#0A2540] text-white rounded-3xl p-8 md:p-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
++          <div>
++            <div className="kicker mb-2">RAAS + SAAS, TOGETHER</div>
++            <h3 className="text-2xl font-semibold tracking-tight">
++              The platform is included with every RaaS deployment.
++            </h3>
++            <p className="text-white/70 mt-2 max-w-xl">
++              There is a clear upgrade path from RaaS-only to the full
++              hardware-plus-software system. Planned pricing lives on the pricing
++              page.
++            </p>
++          </div>
++          <Link
++            href="/pricing"
++            className="btn-primary text-lg px-8 py-4 whitespace-nowrap inline-flex items-center gap-2 group"
++          >
++            See planned pricing
++            <ArrowRight className="w-5 h-5 group-hover:translate-x-0.5 transition" />
++          </Link>
++        </div>
++      </section>
++
++      {/* CROSS-LINK TO RAAS */}
++      <EcosystemCTA
++        kicker="THE OTHER HALF"
++        heading="Software needs robots to run on."
++        body="This platform is designed to deploy on the PaintForge RaaS fleet — professional painting robotics with no capital expense. The two are built to be bought together."
++        crossLink={{ href: "/raas", label: "Explore Robotics as a Service" }}
++      />
++    </div>
++  );
++}
+diff --git a/app/sitemap.ts b/app/sitemap.ts
+index aff36cf..5e9be96 100644
+--- a/app/sitemap.ts
++++ b/app/sitemap.ts
+@@ -10,6 +10,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
+     { path: "/", priority: 1.0, changeFrequency: "weekly" },
+     { path: "/technology", priority: 0.9, changeFrequency: "monthly" },
+     { path: "/solutions", priority: 0.8, changeFrequency: "monthly" },
++    { path: "/raas", priority: 0.9, changeFrequency: "monthly" },
++    { path: "/saas", priority: 0.9, changeFrequency: "monthly" },
+     { path: "/pricing", priority: 0.8, changeFrequency: "monthly" },
+     { path: "/resources", priority: 0.7, changeFrequency: "monthly" },
+     { path: "/dashboard", priority: 0.5, changeFrequency: "monthly" },
+diff --git a/components/EcosystemCTA.tsx b/components/EcosystemCTA.tsx
+new file mode 100644
+index 0000000..33a25f3
+--- /dev/null
++++ b/components/EcosystemCTA.tsx
+@@ -0,0 +1,40 @@
++import Link from "next/link";
++import { ArrowRight } from "lucide-react";
++import { ApplyCTA } from "@/components/ApplyModal";
++
++// Reusable conversion band. Used at the foot of both /raas and /saas to keep
++// the hardware ↔ software story (and the funnel) consistent across pages.
++export function EcosystemCTA({
++  kicker,
++  heading,
++  body,
++  crossLink,
++}: {
++  kicker: string;
++  heading: string;
++  body: string;
++  crossLink: { href: string; label: string };
++}) {
++  return (
++    <section className="bg-[#0A2540] py-16 text-white">
++      <div className="max-w-6xl mx-auto px-6">
++        <div className="section-header section-header--dark">
++          <div className="kicker mb-3">{kicker}</div>
++          <h2 className="section-heading text-white mb-4">{heading}</h2>
++          <p className="text-lg text-white/70 max-w-2xl mb-8">{body}</p>
++
++          <div className="flex flex-col sm:flex-row gap-4">
++            <ApplyCTA label="Apply for the 2026 Pilot" />
++            <Link
++              href={crossLink.href}
++              className="btn-secondary text-lg px-8 py-4 border-white/40 text-white hover:bg-white/10 inline-flex items-center justify-center gap-2 group"
++            >
++              {crossLink.label}
++              <ArrowRight className="w-5 h-5 group-hover:translate-x-0.5 transition" />
++            </Link>
++          </div>
++        </div>
++      </div>
++    </section>
++  );
++}
+diff --git a/components/Footer.tsx b/components/Footer.tsx
+index 3fb9702..4f05d38 100644
+--- a/components/Footer.tsx
++++ b/components/Footer.tsx
+@@ -48,6 +48,8 @@ const columns: { title: string; links: { href: string; label: string }[] }[] = [
+   {
+     title: "Product",
+     links: [
++      { href: "/raas", label: "Robotics as a Service" },
++      { href: "/saas", label: "Software Platform" },
+       { href: "/#roi-calculator", label: "ROI Model" },
+       { href: "/pricing", label: "Planned RaaS Pricing" },
+       { href: "/dashboard", label: "Product Preview" },
+diff --git a/components/IntegrationDiagram.tsx b/components/IntegrationDiagram.tsx
+new file mode 100644
+index 0000000..a74f31e
+--- /dev/null
++++ b/components/IntegrationDiagram.tsx
+@@ -0,0 +1,87 @@
++// Layered architecture diagram for the planned InteriorFinish OS platform.
++// Pure Tailwind — no JS, no images, no layout shift. Framed as target
++// architecture (design intent), consistent with the site's roadmap language.
++
++const LAYERS: {
++  tier: string;
++  title: string;
++  detail: string;
++  tone: "hw" | "mid" | "core" | "cloud" | "ui";
++}[] = [
++  {
++    tier: "Layer 5",
++    title: "Dashboards & AI",
++    detail:
++      "Fleet view, digital-twin playback, defect review, consumption & OEE analytics, alerts.",
++    tone: "ui",
++  },
++  {
++    tier: "Layer 4",
++    title: "Cloud Platform",
++    detail:
++      "Multi-site data store, recipe/version management, model training for vision & predictive maintenance.",
++    tone: "cloud",
++  },
++  {
++    tier: "Layer 3",
++    title: "PaintForge Orchestration Layer",
++    detail:
++      "Vendor-neutral job model, path scheduling, telemetry normalization, role-based access.",
++    tone: "core",
++  },
++  {
++    tier: "Layer 2",
++    title: "Middleware / Vendor SDK / Fieldbus",
++    detail:
++      "ROS 2 or vendor APIs; OPC-UA, MQTT, EtherNet/IP, PROFINET, EtherCAT bridges to line & paint controllers.",
++    tone: "mid",
++  },
++  {
++    tier: "Layer 1",
++    title: "Robot Controller (per vendor)",
++    detail:
++      "ABB IRC5P · FANUC R-30iB Plus · Yaskawa DX200-FM · Kawasaki · KUKA KR C4 + Dürr EcoAUC.",
++    tone: "hw",
++  },
++];
++
++const TONE: Record<string, string> = {
++  ui: "bg-[#FF6B35] text-white border-[#E85D04]",
++  cloud: "bg-[#1E3A5F] text-white border-[#0A2540]",
++  core: "bg-[#0A2540] text-white border-[#0A2540]",
++  mid: "bg-[#F1F5F9] text-[#0A2540] border-[#E2E8F0]",
++  hw: "bg-white text-[#0A2540] border-[#E2E8F0]",
++};
++
++export function IntegrationDiagram() {
++  return (
++    <div className="relative">
++      <ul className="space-y-3" aria-label="Execution stack, top to bottom">
++        {LAYERS.map((l) => (
++          <li
++            key={l.tier}
++            className={`rounded-2xl border p-5 md:p-6 flex flex-col md:flex-row md:items-center gap-2 md:gap-6 ${TONE[l.tone]}`}
++          >
++            <div className="flex items-center gap-3 md:w-64 flex-shrink-0">
++              <span className="text-[11px] font-mono tracking-widest opacity-70">
++                {l.tier}
++              </span>
++              <span className="font-semibold text-lg tracking-tight">
++                {l.title}
++              </span>
++            </div>
++            <p className="text-sm leading-relaxed opacity-90">{l.detail}</p>
++          </li>
++        ))}
++      </ul>
++
++      {/* Data-flow caption */}
++      <p className="mt-5 text-xs text-[#64748B]">
++        Bidirectional: job programs and recipes flow down; telemetry, images,
++        and status flow up. Edge buffering keeps a booth running if the cloud
++        link drops. This is the target architecture PaintForge is building
++        toward — not a shipped, certified deployment.
++      </p>
++    </div>
++  );
++}
+diff --git a/components/Navbar.tsx b/components/Navbar.tsx
+index e6c388a..f91e6a7 100644
+--- a/components/Navbar.tsx
++++ b/components/Navbar.tsx
+@@ -51,6 +51,8 @@ export function Navbar() {
+     { href: "/#features", label: "Platform" },
+     { href: "/technology", label: "Technology" },
+     { href: "/solutions", label: "Solutions" },
++    { href: "/raas", label: "RaaS" },
++    { href: "/saas", label: "SaaS" },
+     { href: "/pricing", label: "Pricing" },
+     { href: "/resources", label: "Resources" },
+     { href: "/dashboard", label: "Product Preview" },
+diff --git a/components/RobotCard.tsx b/components/RobotCard.tsx
+new file mode 100644
+index 0000000..d77d8fb
+--- /dev/null
++++ b/components/RobotCard.tsx
+@@ -0,0 +1,73 @@
++import Link from "next/link";
++import { ArrowRight } from "lucide-react";
++import type { Robot } from "@/lib/robots";
++
++// Shared across /raas and /saas so a robot's specs can never diverge between
++// pages — both render from lib/robots.ts.
++export function RobotCard({
++  robot,
++  crossLinkHref = "/saas#compatibility",
++  crossLinkLabel = "How the platform is designed to orchestrate this class of robot",
++}: {
++  robot: Robot;
++  crossLinkHref?: string;
++  crossLinkLabel?: string;
++}) {
++  return (
++    <div id={robot.id} className="card p-7 flex flex-col scroll-mt-32">
++      <div className="flex items-start justify-between gap-4 mb-1">
++        <div>
++          <div className="text-xs font-mono tracking-[2px] uppercase text-[#FF6B35]">
++            {robot.manufacturer}
++          </div>
++          <h3 className="font-semibold text-xl tracking-tight text-[#0A2540]">
++            {robot.model}
++          </h3>
++        </div>
++        <span className="text-[11px] font-medium text-[#475569] bg-[#F1F5F9] border border-[#E2E8F0] rounded-full px-3 py-1 text-right">
++          {robot.category}
++        </span>
++      </div>
++
++      <p className="text-[#475569] text-[15px] leading-relaxed mt-2">
++        {robot.tagline}
++      </p>
++
++      {/* Spec table — same markup everywhere */}
++      <dl className="mt-5 grid grid-cols-2 gap-x-5 gap-y-2.5 text-sm">
++        {robot.specs.map((s) => (
++          <div key={s.label} className="flex flex-col">
++            <dt className="text-[11px] uppercase tracking-wider text-[#64748B]">
++              {s.label}
++            </dt>
++            <dd className="font-medium text-[#0A2540] tabular-nums">
++              {s.value}
++            </dd>
++          </div>
++        ))}
++      </dl>
++
++      <div className="mt-5 pt-5 border-t border-[#E2E8F0]">
++        <div className="text-[11px] uppercase tracking-wider text-[#64748B] mb-1.5">
++          Typical use
++        </div>
++        <ul className="space-y-1.5 text-sm text-[#475569]">
++          {robot.useCases.map((u, i) => (
++            <li key={i} className="flex gap-2">
++              <span className="text-[#FF6B35] font-mono">→</span>
++              <span>{u}</span>
++            </li>
++          ))}
++        </ul>
++      </div>
++
++      <Link
++        href={crossLinkHref}
++        className="learn-more mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#FF6B35]"
++      >
++        {crossLinkLabel}
++        <ArrowRight className="w-4 h-4 transition-transform" />
++      </Link>
++    </div>
++  );
++}
+diff --git a/lib/robots.ts b/lib/robots.ts
+new file mode 100644
+index 0000000..93d7c97
+--- /dev/null
++++ b/lib/robots.ts
+@@ -0,0 +1,167 @@
++// ---------------------------------------------------------------------------
++// Single source of truth for the professional painting-robot landscape shown
++// on the RaaS and SaaS pages. Specs are drawn from each manufacturer's public
++// documentation (2024–2026). See IMPORTANT note below on framing/honesty.
++//
++// IMPORTANT — these are THIRD-PARTY industrial robots from their respective
++// manufacturers. They are presented here as an industry reference: the class
++// of professional hardware PaintForge's platform is being designed to work
++// with. PaintForge is a pre-launch company, is NOT affiliated with or an
++// authorized distributor of ABB, FANUC, KUKA, Yaskawa, or Kawasaki, and does
++// not currently offer these robots for rent or sale. Do not add "available via
++// PaintForge RaaS", uptime SLAs, certifications, or field-result claims to
++// this data — none of that is true yet. Keep every string factual.
++// ---------------------------------------------------------------------------
++
++export interface RobotSpec {
++  label: string;
++  value: string;
++}
++
++export interface Robot {
++  id: string;
++  manufacturer: string;
++  model: string;
++  /** One-line factual positioning of where this robot sits in the market. */
++  tagline: string;
++  /** Primary application category. */
++  category: string;
++  specs: RobotSpec[];
++  useCases: string[];
++  /** Factual note on why this class of robot is in demand. */
++  demand: string;
++  /** How an orchestration/software layer could add value — framed as design intent. */
++  softwareAngle: string;
++}
++
++export const ROBOTS: Robot[] = [
++  {
++    id: "abb-irb-5500",
++    manufacturer: "ABB",
++    model: "IRB 5500 FlexPainter",
++    tagline:
++      "Exterior automotive body painting with paint-process equipment integrated into the arm.",
++    category: "Automotive exterior body",
++    specs: [
++      { label: "Axes", value: "6" },
++      { label: "Payload", value: "13 kg" },
++      { label: "Repeatability", value: "0.15 mm" },
++      { label: "Protection", value: "IP66/IP67, ATEX explosion-proof" },
++      { label: "Controller", value: "IRC5P (unified motion + process)" },
++      { label: "Mounting", value: "Floor, wall, rail, inverted" },
++    ],
++    useCases: [
++      "Exterior car body coating on stop-and-go and moving lines",
++      "High-flow bell atomizer application with multi-color change",
++      "Booths where fewer robots per station is the goal",
++    ],
++    demand:
++      "ABB positions the FlexPainter's in-arm process equipment (pumps ~15 cm from the wrist) to cut paint and solvent waste during color changes — a persistent cost and compliance pressure in high-volume automotive paint shops.",
++    softwareAngle:
++      "A neutral orchestration layer could normalize its IRC5P job data alongside other vendors' robots for one fleet-wide view of throughput, film build, and consumption.",
++  },
++  {
++    id: "fanuc-p-250ib",
++    manufacturer: "FANUC",
++    model: "P-250iB/15",
++    tagline:
++      "Large-envelope six-axis paint robot with a patented hollow wrist for clean hose routing.",
++    category: "Automotive body & large parts",
++    specs: [
++      { label: "Axes", value: "6" },
++      { label: "Payload", value: "15 kg" },
++      { label: "Reach", value: "2,800 mm" },
++      { label: "Protection", value: "ATEX Zone 1 / Class I Div 1" },
++      { label: "Controller", value: "R-30iB Plus (purge unit)" },
++      { label: "Programming", value: "ROBOGUIDE offline sim" },
++    ],
++    useCases: [
++      "Car bodies, bumpers, and large castings",
++      "Painting moving plastic automotive parts",
++      "Tight booths via floor / wall / ceiling / angle mounting",
++    ],
++    demand:
++      "FANUC's large installed base and offline programming (ROBOGUIDE) make it a default in North American paint shops where service network and spare-parts availability drive uptime decisions.",
++    softwareAngle:
++      "Offline-generated paths could be version-controlled and A/B-compared centrally rather than living only on the pendant.",
++  },
++  {
++    id: "yaskawa-mpx3500",
++    manufacturer: "Yaskawa",
++    model: "Motoman MPX3500",
++    tagline:
++      "Fast, compact six-axis painter with a 70 mm hollow wrist for large applicators.",
++    category: "Automotive body & components",
++    specs: [
++      { label: "Axes", value: "6" },
++      { label: "Payload", value: "15 kg wrist / 25 kg upper arm" },
++      { label: "Reach", value: "2,700 mm (3,500 mm wall)" },
++      { label: "Repeatability", value: "±0.15 mm" },
++      { label: "Protection", value: "FM Class I Div 1 / ATEX" },
++      { label: "Controller", value: "DX200-FM (EtherNet/IP, PROFINET, EtherCAT)" },
++    ],
++    useCases: [
++      "Automobile bodies and construction-machine components",
++      "Recessed, curved, and contoured surfaces",
++      "High-density booth layouts (no-offset L-axis)",
++    ],
++    demand:
++      "The DX200-FM controller's standard fieldbus support (EtherNet/IP, PROFINET, EtherCAT) makes it straightforward to tie into existing line and paint-equipment controllers — a real integration advantage.",
++    softwareAngle:
++      "Its open fieldbus interfaces are the kind of clean integration point a cloud analytics layer would consume for live process telemetry.",
++  },
++  {
++    id: "kawasaki-kj264",
++    manufacturer: "Kawasaki",
++    model: "KJ264",
++    tagline:
++      "Explosion-proof painter with a 3R hollow wrist (70 mm ID) and slim, wide-motion body.",
++    category: "Automotive body",
++    specs: [
++      { label: "Axes", value: "6" },
++      { label: "Payload", value: "15 kg" },
++      { label: "Reach", value: "2,640 mm" },
++      { label: "Wrist", value: "3R hollow, 70 mm inner dia." },
++      { label: "Protection", value: "Explosion-proof" },
++      { label: "Mounting", value: "Floor, wall, shelf" },
++    ],
++    useCases: [
++      "Car body exterior painting",
++      "Upper-arm-mounted paint equipment for hose management",
++      "Layouts needing slim, wide-reaching arms",
++    ],
++    demand:
++      "Kawasaki's hollow-wrist paint line is widely used across Asian automotive OEM paint shops, where clean internal hose routing reduces contamination-related rejects.",
++    softwareAngle:
++      "Consistent reject/defect capture across a Kawasaki line would feed the same quality dataset as any other vendor in a unified platform.",
++  },
++  {
++    id: "kuka-ready2-spray",
++    manufacturer: "KUKA + Dürr",
++    model: "ready2_spray (KR AGILUS KR 10 R1100 EX)",
++    tagline:
++      "Compact general-industry painting package: KUKA arm + Dürr paint technology.",
++    category: "General industry (wood, plastics, glass, metal)",
++    specs: [
++      { label: "Axes", value: "6" },
++      { label: "Payload", value: "10 kg" },
++      { label: "Reach", value: "1,101 mm" },
++      { label: "Repeatability", value: "0.03 mm" },
++      { label: "Protection", value: "ATEX 3G/3D explosion-proof" },
++      { label: "Controller", value: "KUKA KR C4 + Dürr EcoAUC" },
++    ],
++    useCases: [
++      "Small and medium parts in general industry",
++      "Wood, plastics, glass, and metal finishing",
++      "1K/2K, high/low pressure, water- or solvent-based",
++    ],
++    demand:
++      "A pre-configured, pre-tested package lowers the integration barrier for smaller manufacturers and job shops — the exact GTA metal-fabrication and appliance segment that can't justify a full custom paint line.",
++    softwareAngle:
++      "Pre-packaged cells still benefit from centralized recipe management and consumption tracking once several are deployed across sites.",
++  },
++];
++
++// Shown verbatim near any robot listing.
++export const ROBOTS_DISCLAIMER =
++  "These are third-party industrial robots from ABB, FANUC, Yaskawa, Kawasaki, and KUKA/Dürr, shown to illustrate the professional painting-robot category. PaintForge is a pre-launch company, is not affiliated with or an authorized distributor of these manufacturers, and does not currently offer them for rent or sale. Specifications are from each manufacturer's public documentation.";
