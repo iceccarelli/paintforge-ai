@@ -7,6 +7,8 @@ import {
 import { ROBOTS, ROBOTS_DISCLAIMER } from "@/lib/robots";
 import { IntegrationDiagram } from "@/components/IntegrationDiagram";
 import { RobotCellShowcase } from "@/components/RobotCellShowcase";
+import RobotShowcaseMount from "@/components/RobotShowcaseMount";
+import { ProSimulatorLauncher } from "@/components/ProSimulatorLauncher";
 import { EcosystemCTA } from "@/components/EcosystemCTA";
 import { EcosystemRibbon } from "@/components/EcosystemRibbon";
 import { PlatformComparison } from "@/components/PlatformComparison";
@@ -109,12 +111,37 @@ export default function SaaSPage() {
             <div className="kicker mb-3">SOFTWARE, DRIVING HARDWARE</div>
             <h2 className="section-heading">Watch the platform run a spray path.</h2>
             <p className="mt-3 text-lg text-[#475569] max-w-3xl">
-              The software plans the passes, drives the arm, and holds film
-              thickness to target while reporting coverage in real time. Drag to
-              orbit; replay the coat.
+              The software plans the passes and holds film thickness to target while
+              reporting coverage in real time. Open the machine up: cutaway, exploded,
+              slow-motion internals. Drag to orbit; scroll to zoom.
             </p>
           </div>
-          <RobotCellShowcase />
+
+          <RobotShowcaseMount />
+
+          <div className="mt-8 rounded-2xl border border-[#E2E8F0] bg-gradient-to-br from-[#0A2540] to-[#0D2B4A] p-8 flex flex-col md:flex-row md:items-center gap-6">
+            <div className="flex-1">
+              <div className="text-[11px] font-mono tracking-widest uppercase text-[#FF9A6B] mb-2">PRO SIMULATOR</div>
+              <h3 className="text-white font-semibold text-2xl tracking-tight mb-1">
+                The same plan, at full mechanical fidelity.
+              </h3>
+              <p className="text-white/70 text-[15px] max-w-xl">
+                Launch the Godot-powered Pro Simulator to inspect every actuator, gear,
+                and paint-delivery detail while the platform runs a realistic coverage
+                path. Your current job settings carry over.
+              </p>
+            </div>
+            <ProSimulatorLauncher job={{ source: "saas", surface: "both" }} />
+          </div>
+
+          <details className="mt-6">
+            <summary className="cursor-pointer text-sm text-[#64748B] hover:text-[#0A2540]">
+              Compare the reference industrial arms
+            </summary>
+            <div className="mt-4">
+              <RobotCellShowcase />
+            </div>
+          </details>
         </div>
       </section>
 
