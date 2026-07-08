@@ -134,15 +134,20 @@ export default function SaaSPage() {
             <ProSimulatorLauncher job={{ source: "saas", surface: "both" }} />
           </div>
 
-          <details className="mt-6">
-            <summary className="cursor-pointer text-sm text-[#64748B] hover:text-[#0A2540]">
-              Compare the reference industrial arms
-            </summary>
-            <div className="mt-4">
-              <RobotCellShowcase />
-            </div>
-          </details>
         </div>
+      </section>
+
+      {/* PICK A ROBOT — interactive reference machines */}
+      <section className="max-w-6xl mx-auto px-6 py-16">
+        <div className="section-header mb-8">
+          <div className="kicker mb-3">PICK A ROBOT · WATCH IT RUN</div>
+          <h2 className="section-heading">Drive any of the five, live.</h2>
+          <p className="mt-3 text-lg text-[#475569] max-w-3xl">
+            Select a robot to load its class-accurate build and watch the platform run a
+            coat on it. Launch any machine into the full-fidelity Pro Simulator.
+          </p>
+        </div>
+        <RobotCellShowcase />
       </section>
 
       {/* CAPABILITIES */}

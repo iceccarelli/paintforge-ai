@@ -4,6 +4,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { Activity, Layers, Gauge, RotateCcw, Play, Pause, Move3d } from "lucide-react";
 import { ROBOTS } from "@/lib/robots";
+import { ProSimulatorLauncher } from "@/components/ProSimulatorLauncher";
 import type { CellFrame } from "@/components/RobotCell3D";
 
 const RobotCell3D = dynamic(
@@ -147,6 +148,10 @@ export function RobotCellShowcase() {
             >
               <RotateCcw className="w-4 h-4" /> Reset
             </button>
+          </div>
+
+          <div className="mt-3 pt-3 border-t border-[#E2E8F0]">
+            <ProSimulatorLauncher variant="inline" job={{ robotId: robot.id, source: "reference" }} />
           </div>
         </div>
       </div>

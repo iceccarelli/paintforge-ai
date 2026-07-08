@@ -57,12 +57,13 @@ export function ProSimulatorLauncher({
   }
 
   function launchDesktop(os: "win" | "mac" | "linux") {
-    // Prefer a deep link if the app is installed; fall back to the download.
-    const dl =
-      DESKTOP_BASE &&
-      `${DESKTOP_BASE}/PaintForgeProSim-${os}.${os === "win" ? "exe" : os === "mac" ? "dmg" : "AppImage"}`;
-    if (dl) window.location.href = dl;
-    else window.open(`paintforge://sim?${q}`, "_self");
+    // Prefer a signed download if a release base is set; else try the deep link.
+    const ext = os === "win" ? "exe" : os === "mac" ? "dmg" : "AppImage";
+    if (DESKTOP_BASE) {
+      window.location.assign(`${DESKTOP_BASE}/PaintForgeProSim-${os}.${ext}`);
+    } else {
+      window.open(`paintforge://sim?${q}`, "_self");
+    }
   }
 
   const hero = variant === "hero";
