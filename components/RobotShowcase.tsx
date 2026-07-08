@@ -292,17 +292,31 @@ const ORDER = (() => {
   return o;
 })();
 
-function Wall({ painted }: { painted: number }) {
+function Wall({ paintedRef }: { paintedRef: React.RefObject<number> }) {
   const cw = 3.6 / COLS;
   const ch = 2.4 / ROWS;
+  const cells = useRef<(THREE.Mesh | null)[]>([]);
+  // Reveal cells imperatively so we never read a ref during render.
+  useFrame(() => {
+    const p = Math.floor(paintedRef.current);
+    for (let i = 0; i < ORDER.length; i++) {
+      const m = cells.current[i];
+      if (m) m.visible = i < p;
+    }
+  });
   return (
     <group position={[0, 1.4, -1.15]}>
       <mesh receiveShadow>
         <planeGeometry args={[3.7, 2.5]} />
         <meshStandardMaterial color="#EEF1F5" roughness={0.95} />
       </mesh>
-      {ORDER.slice(0, painted).map(([c, r], i) => (
-        <mesh key={i} position={[-1.8 + cw * (c + 0.5), -1.2 + ch * (r + 0.5), 0.01]}>
+      {ORDER.map(([c, r], i) => (
+        <mesh
+          key={i}
+          ref={(el) => { cells.current[i] = el; }}
+          visible={false}
+          position={[-1.8 + cw * (c + 0.5), -1.2 + ch * (r + 0.5), 0.01]}
+        >
           <planeGeometry args={[cw * 0.98, ch * 0.98]} />
           <meshStandardMaterial color={PAINT} roughness={0.7} />
         </mesh>
@@ -328,7 +342,6 @@ function Robot({
 }) {
   const plane = useCutPlane();
   const speed = slow ? 0.15 : 1;
-  const rot = useRef({ head: 0 });
   const paintedRef = useRef(0);
   const head = useRef<THREE.Group>(null);
 
@@ -352,11 +365,9 @@ function Robot({
     }
   });
 
-  const painted = Math.floor(paintedRef.current);
-
   return (
     <group>
-      <Wall painted={painted} />
+      <Wall paintedRef={paintedRef} />
 
       {/* ============ BASE (drive + power + control) ============ */}
       <group position={[0, 0.28 - ex * 0.15, 0]}>

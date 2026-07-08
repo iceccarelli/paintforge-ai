@@ -138,14 +138,20 @@ export default function RaaSPage() {
           <ProSimulatorLauncher job={{ source: "raas", surface: "both", coats: 3 }} />
         </div>
 
-        <details className="mt-6">
-          <summary className="cursor-pointer text-sm text-[#64748B] hover:text-[#0A2540]">
-            Compare the reference industrial arms
-          </summary>
-          <div className="mt-4">
-            <RobotCellShowcase />
-          </div>
-        </details>
+      </section>
+
+      {/* PICK A ROBOT — interactive reference machines */}
+      <section className="max-w-6xl mx-auto px-6 pb-16">
+        <div className="section-header mb-8">
+          <div className="kicker mb-3">PICK A ROBOT · WATCH IT RUN</div>
+          <h2 className="section-heading">Five reference machines, live.</h2>
+          <p className="mt-3 text-[#475569] max-w-2xl">
+            Select any robot to load its class-accurate build and watch it run a coat —
+            distinct base, wrist, and applicator per machine. Launch any one into the
+            full-fidelity Pro Simulator.
+          </p>
+        </div>
+        <RobotCellShowcase />
       </section>
 
       {/* ROBOT LANDSCAPE — problem/solution */}
