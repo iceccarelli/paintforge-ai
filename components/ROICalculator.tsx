@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { ProSimulatorLauncher } from '@/components/ProSimulatorLauncher';
 import { Calculator, TrendingUp, Clock, Users, Zap } from 'lucide-react';
 
 interface ROIResults {
@@ -248,6 +249,14 @@ export function ROICalculator() {
                   )}
                 </div>
               </div>
+            </div>
+
+            <div className="mt-6 rounded-xl border border-[#E2E8F0] bg-white p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="flex-1">
+                <div className="text-sm font-semibold text-[#0A2540]">Inspect this exact scenario</div>
+                <div className="text-xs text-[#64748B]">Carries {sqft.toLocaleString()} sqft &middot; {coats} coats into the Pro Simulator.</div>
+              </div>
+              <ProSimulatorLauncher variant="inline" job={{ sqft, coats, surface: "both", source: "roi" }} />
             </div>
 
             <div className="mt-6 pt-5 border-t text-xs text-[#475569] flex items-center justify-between">
