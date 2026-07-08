@@ -5,16 +5,7 @@ extends Node3D
 ## These are STYLIZED representations of third-party robot CLASSES with their
 ## real published specs — not PaintForge hardware, not vendor-accurate replicas,
 ## not authorized models. Everything is a concept target.
-##
-## Each robot is a 6-axis arm built from primitives with visible internals:
-## meshing gears + servo rotors at the joints, a paint-delivery chain
-## (pump -> hose -> rotary bell OR spray gun), and a task-appropriate target
-## the tool actually reaches via 2-link inverse kinematics.
-##
-## Buttons + keys:  Prev/Next robot · Run · Cutaway(C) · Exploded(X) · Slow-mo(Z) · Camera(Space)
 
-# --------------------------------------------------------------- robot profiles
-# Values mirror lib/robots.ts / the site cards. reach = arm scale factor.
 const ROBOTS := [
 	{
 		"id":"abb-irb-5500","vendor":"ABB","model":"IRB 5500 FlexPainter",
@@ -53,18 +44,16 @@ const ROBOTS := [
 	},
 ]
 
-# ------------------------------------------------------------------------ state
 var idx := 0
 var running := true
 var cutaway := false
 var exploded := false
 var slowmo := false
 
-var speed := 1.0
 var arm_root: Node3D
-var j1: Node3D    # base yaw
-var j2: Node3D    # shoulder pitch
-var j3: Node3D    # elbow pitch
+var j1: Node3D
+var j2: Node3D
+var j3: Node3D
 var wrist: Node3D
 var tool_tip: Node3D
 var bell: Node3D
@@ -74,12 +63,10 @@ var gears: Array[Dictionary] = []
 var cut_boxes: Array[CSGBox3D] = []
 var explode_targets: Array[Dictionary] = []
 
-# 2-link IK params (set per robot)
 var L1 := 1.4
 var L2 := 1.2
 var shoulder_h := 1.15
 
-# target / coverage
 const COLS := 14
 const ROWS := 8
 var order: Array[Vector2i] = []
@@ -90,14 +77,12 @@ var target_center := Vector3(0,1.4,-1.6)
 var target_w := 2.4
 var target_h := 1.6
 
-# cameras / ui
 var cameras: Array[Camera3D] = []
 var cam_index := 0
 var name_lbl: Label
 var spec_lbl: Label
 var hud: Label
 
-# =============================================================================
 func _ready() -> void:
 	_build_environment()
 	_build_ui()
@@ -109,7 +94,7 @@ func _process(delta: float) -> void:
 	if running:
 		for r in rotors: r.rotate_z(10.0 * dt)
 		for g in gears: g.node.rotate_z(g.dir * 6.0 * dt)
-		if bell: bell.rotate_y(45.0 * dt)               # rotary bell spins fast
+		if bell: bell.rotate_y(45.0 * dt)
 		if piston: piston.position.y = -0.02 + sin(Time.get_ticks_msec()*0.012*(0.15 if slowmo else 1.0))*0.06
 		_advance_task(dt)
 	for e in explode_targets:
@@ -124,7 +109,6 @@ func _unhandled_input(_e: InputEvent) -> void:
 	if Input.is_action_just_pressed("toggle_slowmo"): slowmo = not slowmo
 	if Input.is_action_just_pressed("cam_next"): _next_camera()
 
-# ------------------------------------------------------------- task + kinematics
 func _advance_task(dt: float) -> void:
 	var total := COLS*ROWS
 	painted = min(total, painted + dt*7.0)
@@ -142,15 +126,12 @@ func _cell_world(c: Vector2i) -> Vector3:
 	var cw := target_w/COLS; var ch := target_h/ROWS
 	return target_center + Vector3(-target_w/2.0 + cw*(c.x+0.5), -target_h/2.0 + ch*(c.y+0.5), 0.0)
 
-## Drive J1 (yaw) + 2-link IK on J2/J3 so the tool tip reaches wp.
 func _aim_arm_at(wp: Vector3) -> void:
 	var local := wp - arm_root.global_position
-	# base yaw faces the target point
 	var yaw := atan2(local.x, -local.z)
 	if j1: j1.rotation.y = lerp_angle(j1.rotation.y, yaw, 0.25)
-	# work in the arm's sagittal plane
 	var horiz := Vector2(local.x, local.z).length()
-	var d := horiz - 0.25                       # forward offset of shoulder
+	var d := horiz - 0.25
 	var h := wp.y - (arm_root.global_position.y + shoulder_h)
 	var r := clampf(sqrt(d*d + h*h), abs(L1-L2)+0.02, L1+L2-0.02)
 	var cos_e := clampf((r*r - L1*L1 - L2*L2)/(2.0*L1*L2), -1.0, 1.0)
@@ -158,14 +139,11 @@ func _aim_arm_at(wp: Vector3) -> void:
 	var shoulder := atan2(h, d) - atan2(L2*sin(elbow), L1 + L2*cos(elbow))
 	if j2: j2.rotation.x = lerp_angle(j2.rotation.x, -shoulder, 0.25)
 	if j3: j3.rotation.x = lerp_angle(j3.rotation.x, elbow, 0.25)
-	# keep the applicator pointing into the surface
 	if wrist: wrist.rotation.x = lerp_angle(wrist.rotation.x, shoulder - elbow + 0.2, 0.25)
 
-# ---------------------------------------------------------------- robot loading
 func _load_robot(new_idx: int) -> void:
 	idx = wrapi(new_idx, 0, ROBOTS.size())
 	var r: Dictionary = ROBOTS[idx]
-	# reset collections
 	rotors.clear(); gears.clear(); cut_boxes.clear(); explode_targets.clear()
 	bell = null; piston = null
 	if arm_root: arm_root.queue_free()
@@ -181,37 +159,24 @@ func _load_robot(new_idx: int) -> void:
 func _build_arm(r: Dictionary) -> void:
 	var accent: Color = r.accent
 	arm_root = Node3D.new(); add_child(arm_root)
-
-	# pedestal
 	_shell(arm_root, _cyl(0.42,0.5), Vector3(0,0.25,0), Color(0.12,0.16,0.22))
-	# J1 yaw turret
 	j1 = Node3D.new(); j1.position = Vector3(0,0.5,0); arm_root.add_child(j1)
 	_shell(j1, _cyl(0.34,0.4), Vector3(0,0.2,0), accent.darkened(0.35))
-	_joint_gears(j1, Vector3(0,0.2,0.0), 0.9)          # base drive gears
+	_joint_gears(j1, Vector3(0,0.2,0.0), 0.9)
 	_servo(j1, Vector3(0.28,0.2,0))
-
-	# J2 shoulder
 	j2 = Node3D.new(); j2.position = Vector3(0,0.45,0); j1.add_child(j2)
 	_joint_gears(j2, Vector3.ZERO, 1.0)
 	_servo(j2, Vector3(0.24,0,0))
-	# upper arm shell (length L1)
 	var upper := _shell(j2, _box(0.22,L1,0.22), Vector3(0,L1/2.0,0), Color(0.86,0.88,0.9))
 	_explode(upper, upper.position, upper.position + Vector3(0.6,0,0))
-
-	# J3 elbow at top of upper arm
 	j3 = Node3D.new(); j3.position = Vector3(0,L1,0); j2.add_child(j3)
 	_joint_gears(j3, Vector3.ZERO, 0.85)
 	_servo(j3, Vector3(0.2,0,0))
-	# forearm shell (length L2)
 	var fore := _shell(j3, _box(0.18,L2,0.18), Vector3(0,L2/2.0,0), Color(0.8,0.82,0.85))
 	_explode(fore, fore.position, fore.position + Vector3(-0.5,0,0))
-
-	# wrist (3R) at end of forearm
 	wrist = Node3D.new(); wrist.position = Vector3(0,L2,0); j3.add_child(wrist)
 	_shell(wrist, _cyl(0.12,0.28), Vector3(0,0.1,0), accent)
 	_joint_gears(wrist, Vector3(0,0.1,0), 0.5)
-
-	# paint delivery: pump on the upper arm + hose + applicator
 	_pump(j2, Vector3(0.22,L1*0.4,0))
 	tool_tip = Node3D.new(); tool_tip.position = Vector3(0,0.3,0); wrist.add_child(tool_tip)
 	if r.tool == "bell":
@@ -221,7 +186,6 @@ func _build_arm(r: Dictionary) -> void:
 
 func _build_target(r: Dictionary) -> void:
 	target_root = Node3D.new(); add_child(target_root)
-	# pick target shape + coverage size per task
 	match r.target:
 		"largepart": target_w=3.0; target_h=2.0; target_center=Vector3(0,1.5,-1.9)
 		"contour":   target_w=2.2; target_h=1.6; target_center=Vector3(0,1.4,-1.6)
@@ -232,7 +196,6 @@ func _build_target(r: Dictionary) -> void:
 	panel.position = target_center
 	panel.material_override = _mat(Color(0.90,0.92,0.94),0.0,0.9)
 	target_root.add_child(panel)
-	# coverage cells + boustrophedon order
 	order.clear(); cells.clear()
 	for row in ROWS:
 		var cs := range(COLS) if row%2==0 else range(COLS-1,-1,-1)
@@ -246,7 +209,6 @@ func _build_target(r: Dictionary) -> void:
 		q.visible = false
 		target_root.add_child(q); cells.append(q)
 
-# ------------------------------------------------------------------ sub-assemblies
 func _joint_gears(parent: Node3D, pos: Vector3, s: float) -> void:
 	var g := Node3D.new(); g.position = pos; parent.add_child(g)
 	_shell(g, _box(0.34*s,0.30*s,0.18*s), Vector3.ZERO, Color(0.24,0.28,0.33))
@@ -279,7 +241,6 @@ func _pump(parent: Node3D, pos: Vector3) -> void:
 	_explode(g, pos, pos + Vector3(0.4,0,0))
 
 func _rotary_bell(parent: Node3D, accent: Color) -> void:
-	# high-speed rotary bell atomizer
 	_part(parent, _cyl(0.05,0.12), Vector3(0,0,0), Color(0.1,0.12,0.16))
 	bell = Node3D.new(); bell.position = Vector3(0,0.11,0); parent.add_child(bell)
 	_part(bell, _cone(0.11,0.09), Vector3(0,0.04,0), Color(0.85,0.87,0.9), Vector3(180,0,0))
@@ -287,8 +248,8 @@ func _rotary_bell(parent: Node3D, accent: Color) -> void:
 
 func _spray_gun(parent: Node3D, accent: Color) -> void:
 	_part(parent, _box(0.09,0.16,0.09), Vector3(0,0.02,0), Color(0.12,0.14,0.18))
-	_part(parent, _box(0.04,0.06,0.10), Vector3(0,-0.04,0.06), Color(0.2,0.22,0.26))  # trigger
-	_part(parent, _cone(0.035,0.08), Vector3(0,0.12,0), Color(0.05,0.06,0.09))          # nozzle
+	_part(parent, _box(0.04,0.06,0.10), Vector3(0,-0.04,0.06), Color(0.2,0.22,0.26))
+	_part(parent, _cone(0.035,0.08), Vector3(0,0.12,0), Color(0.05,0.06,0.09))
 	_spray_cone(parent, Vector3(0,0.18,0), accent, 0.16)
 
 func _spray_cone(parent: Node3D, pos: Vector3, accent: Color, r: float) -> void:
@@ -300,7 +261,6 @@ func _spray_cone(parent: Node3D, pos: Vector3, accent: Color, r: float) -> void:
 	c.material_override = m
 	parent.add_child(c)
 
-# ------------------------------------------------------------------ shells/cutaway
 func _shell(parent: Node3D, mesh_res, pos: Vector3, col: Color, rot := Vector3.ZERO) -> CSGCombiner3D:
 	var comb := CSGCombiner3D.new(); comb.position = pos; comb.rotation_degrees = rot
 	comb.use_collision = false
@@ -316,7 +276,6 @@ func _set_cutaway(v: bool) -> void:
 	cutaway = v
 	for b in cut_boxes: b.visible = v
 
-# ------------------------------------------------------------------ environment
 func _build_environment() -> void:
 	var we := WorldEnvironment.new(); var e := Environment.new()
 	e.background_mode = Environment.BG_COLOR
@@ -332,10 +291,10 @@ func _build_environment() -> void:
 
 func _build_cameras() -> void:
 	var presets := [
-		{"pos":Vector3(4.2,3.0,4.6),"look":Vector3(0,1.4,-0.4)},   # overview
-		{"pos":Vector3(1.2,2.4,1.8),"look":Vector3(0,2.2,-0.2)},   # wrist / applicator
-		{"pos":Vector3(1.8,1.0,1.6),"look":Vector3(0,0.9,0)},      # base gears
-		{"pos":Vector3(2.8,2.4,-3.2),"look":Vector3(0,1.4,-1.6)},  # coverage
+		{"pos":Vector3(4.2,3.0,4.6),"look":Vector3(0,1.4,-0.4)},
+		{"pos":Vector3(1.2,2.4,1.8),"look":Vector3(0,2.2,-0.2)},
+		{"pos":Vector3(1.8,1.0,1.6),"look":Vector3(0,0.9,0)},
+		{"pos":Vector3(2.8,2.4,-3.2),"look":Vector3(0,1.4,-1.6)},
 	]
 	for p in presets:
 		var c := Camera3D.new(); c.position = p.pos
@@ -348,7 +307,6 @@ func _next_camera() -> void:
 	cam_index = (cam_index+1) % cameras.size()
 	cameras[cam_index].current = true
 
-# ------------------------------------------------------------------ UI
 func _build_ui() -> void:
 	var cl := CanvasLayer.new(); add_child(cl)
 	var panel := PanelContainer.new()
@@ -362,8 +320,6 @@ func _build_ui() -> void:
 	spec_lbl = Label.new(); spec_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	spec_lbl.add_theme_color_override("font_color", Color(0.8,0.86,0.94)); vb.add_child(spec_lbl)
 	hud = Label.new(); hud.add_theme_color_override("font_color", Color(0.7,0.78,0.88)); vb.add_child(hud)
-
-	# button row (clickable UX; keys still work)
 	var hb := HBoxContainer.new(); hb.add_theme_constant_override("separation",6); vb.add_child(hb)
 	_btn(hb,"◀ Robot", func(): _load_robot(idx-1))
 	_btn(hb,"Robot ▶", func(): _load_robot(idx+1))
@@ -384,7 +340,6 @@ func _update_hud() -> void:
 		mode, "running" if running else "paused", "0.15x" if slowmo else "1x",
 		int(painted/float(COLS*ROWS)*100.0)]
 
-# ------------------------------------------------------------------ job param
 func _job_robot_index() -> int:
 	var want := ""
 	if OS.has_feature("web") and JavaScriptBridge:
@@ -399,7 +354,6 @@ func _job_robot_index() -> int:
 		if ROBOTS[i].id == want: return i
 	return 0
 
-# ------------------------------------------------------------------ explode + helpers
 func _explode(node: Node3D, solid: Vector3, blown: Vector3) -> void:
 	explode_targets.append({"node":node,"solid":solid,"blown":blown})
 
