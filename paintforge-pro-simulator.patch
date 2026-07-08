@@ -1,0 +1,1459 @@
+From a0c2ee7c195660ab8a377df96a1699a0eaf89c8f Mon Sep 17 00:00:00 2001
+From: PF Sim <sim@paintforge.local>
+Date: Wed, 8 Jul 2026 13:57:52 +0000
+Subject: [PATCH] feat: R3F inspectable digital twin + Godot Pro Simulator
+ scaffold + /raas /saas /dashboard integration
+
+---
+ app/dashboard/page.tsx              |  20 +-
+ app/raas/page.tsx                   |  34 +-
+ app/saas/page.tsx                   |  35 +-
+ components/ProSimulatorLauncher.tsx | 142 +++++++
+ components/RobotShowcase.tsx        | 614 ++++++++++++++++++++++++++++
+ components/RobotShowcaseMount.tsx   |  23 ++
+ godot/Main.gd                       | 343 ++++++++++++++++
+ godot/README.md                     | 102 +++++
+ godot/project.godot                 |  29 ++
+ 9 files changed, 1334 insertions(+), 8 deletions(-)
+ create mode 100644 components/ProSimulatorLauncher.tsx
+ create mode 100644 components/RobotShowcase.tsx
+ create mode 100644 components/RobotShowcaseMount.tsx
+ create mode 100644 godot/Main.gd
+ create mode 100644 godot/README.md
+ create mode 100644 godot/project.godot
+
+diff --git a/app/dashboard/page.tsx b/app/dashboard/page.tsx
+index d30c78d..108bda8 100644
+--- a/app/dashboard/page.tsx
++++ b/app/dashboard/page.tsx
+@@ -1,4 +1,6 @@
+-import { Bot, Gauge, ClipboardList, Thermometer } from "lucide-react";
++import { Bot, Gauge, ClipboardList, Thermometer, ScanEye } from "lucide-react";
++import RobotShowcaseMount from "@/components/RobotShowcaseMount";
++import { ProSimulatorLauncher } from "@/components/ProSimulatorLauncher";
+ 
+ export const metadata = {
+   title: "Product Preview | PaintForge",
+@@ -33,6 +35,22 @@ export default function DashboardPreview() {
+         </p>
+       </div>
+ 
++      {/* Inspectable digital twin */}
++      <div className="mb-10">
++        <div className="flex items-center gap-2 mb-4">
++          <ScanEye className="w-5 h-5 text-[#FF6B35]" />
++          <h2 className="font-semibold text-xl tracking-tight">Digital Twin (concept)</h2>
++        </div>
++        <RobotShowcaseMount />
++        <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
++          <p className="text-sm text-[#64748B] max-w-xl">
++            A live, inspectable preview of the concept unit. Open it up to see how the
++            painting mechanism works, then launch the full-fidelity Pro Simulator.
++          </p>
++          <ProSimulatorLauncher variant="inline" job={{ source: "dashboard" }} />
++        </div>
++      </div>
++
+       {/* Fleet status */}
+       <div className="mb-10">
+         <div className="flex items-center gap-2 mb-4">
+diff --git a/app/raas/page.tsx b/app/raas/page.tsx
+index 9e6273f..3492569 100644
+--- a/app/raas/page.tsx
++++ b/app/raas/page.tsx
+@@ -4,6 +4,8 @@ import { Wallet, Wrench, ShieldCheck, Check, ArrowRight, Info, AlertTriangle } f
+ import { ROBOTS, ROBOTS_DISCLAIMER, NICHE_PROBLEMS } from "@/lib/robots";
+ import { RobotCard } from "@/components/RobotCard";
+ import { RobotCellShowcase } from "@/components/RobotCellShowcase";
++import RobotShowcaseMount from "@/components/RobotShowcaseMount";
++import { ProSimulatorLauncher } from "@/components/ProSimulatorLauncher";
+ import { EcosystemCTA } from "@/components/EcosystemCTA";
+ import { EcosystemRibbon } from "@/components/EcosystemRibbon";
+ import { PlatformComparison } from "@/components/PlatformComparison";
+@@ -114,10 +116,36 @@ export default function RaaSPage() {
+       <section className="max-w-6xl mx-auto px-6 py-16">
+         <div className="section-header mb-8">
+           <div className="kicker mb-3">SEE IT RUN</div>
+-          <h2 className="section-heading">A cell you can actually move.</h2>
+-          <p className="mt-3 text-[#475569] max-w-2xl">Drag to orbit. Replay the coat. The software plans the passes and holds film build to target.</p>
++          <h2 className="section-heading">A machine you can see through.</h2>
++          <p className="mt-3 text-[#475569] max-w-2xl">
++            Slice it open, explode it, watch the internals move. This is the PaintForge
++            concept unit as an inspectable digital twin — every part is a design target.
++          </p>
++        </div>
++
++        <RobotShowcaseMount />
++
++        <div className="mt-8 rounded-2xl border border-[#E2E8F0] bg-gradient-to-br from-[#0A2540] to-[#0D2B4A] p-8 flex flex-col md:flex-row md:items-center gap-6">
++          <div className="flex-1">
++            <div className="text-[11px] font-mono tracking-widest uppercase text-[#FF9A6B] mb-2">PRO SIMULATOR</div>
++            <h3 className="text-white font-semibold text-2xl tracking-tight mb-1">Inspect it at full mechanical fidelity.</h3>
++            <p className="text-white/70 text-[15px] max-w-xl">
++              The browser twin above is the preview. The Godot-powered Pro Simulator adds
++              cross-section teardown, exploded assemblies, slow-motion internals, and a
++              realistic coverage run you can drive.
++            </p>
++          </div>
++          <ProSimulatorLauncher job={{ source: "raas", surface: "both", coats: 3 }} />
+         </div>
+-        <RobotCellShowcase />
++
++        <details className="mt-6">
++          <summary className="cursor-pointer text-sm text-[#64748B] hover:text-[#0A2540]">
++            Compare the reference industrial arms
++          </summary>
++          <div className="mt-4">
++            <RobotCellShowcase />
++          </div>
++        </details>
+       </section>
+ 
+       {/* ROBOT LANDSCAPE — problem/solution */}
+diff --git a/app/saas/page.tsx b/app/saas/page.tsx
+index 2dc3048..0442d7b 100644
+--- a/app/saas/page.tsx
++++ b/app/saas/page.tsx
+@@ -7,6 +7,8 @@ import {
+ import { ROBOTS, ROBOTS_DISCLAIMER } from "@/lib/robots";
+ import { IntegrationDiagram } from "@/components/IntegrationDiagram";
+ import { RobotCellShowcase } from "@/components/RobotCellShowcase";
++import RobotShowcaseMount from "@/components/RobotShowcaseMount";
++import { ProSimulatorLauncher } from "@/components/ProSimulatorLauncher";
+ import { EcosystemCTA } from "@/components/EcosystemCTA";
+ import { EcosystemRibbon } from "@/components/EcosystemRibbon";
+ import { PlatformComparison } from "@/components/PlatformComparison";
+@@ -109,12 +111,37 @@ export default function SaaSPage() {
+             <div className="kicker mb-3">SOFTWARE, DRIVING HARDWARE</div>
+             <h2 className="section-heading">Watch the platform run a spray path.</h2>
+             <p className="mt-3 text-lg text-[#475569] max-w-3xl">
+-              The software plans the passes, drives the arm, and holds film
+-              thickness to target while reporting coverage in real time. Drag to
+-              orbit; replay the coat.
++              The software plans the passes and holds film thickness to target while
++              reporting coverage in real time. Open the machine up: cutaway, exploded,
++              slow-motion internals. Drag to orbit; scroll to zoom.
+             </p>
+           </div>
+-          <RobotCellShowcase />
++
++          <RobotShowcaseMount />
++
++          <div className="mt-8 rounded-2xl border border-[#E2E8F0] bg-gradient-to-br from-[#0A2540] to-[#0D2B4A] p-8 flex flex-col md:flex-row md:items-center gap-6">
++            <div className="flex-1">
++              <div className="text-[11px] font-mono tracking-widest uppercase text-[#FF9A6B] mb-2">PRO SIMULATOR</div>
++              <h3 className="text-white font-semibold text-2xl tracking-tight mb-1">
++                The same plan, at full mechanical fidelity.
++              </h3>
++              <p className="text-white/70 text-[15px] max-w-xl">
++                Launch the Godot-powered Pro Simulator to inspect every actuator, gear,
++                and paint-delivery detail while the platform runs a realistic coverage
++                path. Your current job settings carry over.
++              </p>
++            </div>
++            <ProSimulatorLauncher job={{ source: "saas", surface: "both" }} />
++          </div>
++
++          <details className="mt-6">
++            <summary className="cursor-pointer text-sm text-[#64748B] hover:text-[#0A2540]">
++              Compare the reference industrial arms
++            </summary>
++            <div className="mt-4">
++              <RobotCellShowcase />
++            </div>
++          </details>
+         </div>
+       </section>
+ 
+diff --git a/components/ProSimulatorLauncher.tsx b/components/ProSimulatorLauncher.tsx
+new file mode 100644
+index 0000000..c98fe11
+--- /dev/null
++++ b/components/ProSimulatorLauncher.tsx
+@@ -0,0 +1,142 @@
++"use client";
++
++/**
++ * ProSimulatorLauncher — the bridge from the Next.js site into the Godot 4
++ * high-fidelity "Pro Simulator".
++ *
++ * Two targets:
++ *   • Web player  — the Godot HTML5 export, served from /pro-sim/ (static),
++ *                   opened in a new tab with job params in the query string.
++ *   • Desktop app — a signed download (Win/macOS/Linux) that reads the same
++ *                   params from a deep link (paintforge://sim?...) or a dropped
++ *                   .pfjob file.
++ *
++ * Set NEXT_PUBLIC_PRO_SIM_URL to the deployed web build (e.g. a Vercel static
++ * route or an itch.io/CDN URL). If unset, the button shows an honest
++ * "in development" state instead of 404-ing — pre-launch discipline.
++ *
++ * Job params let the same scenario the visitor just configured (sqft, coats,
++ * surface, robot) carry straight into the Pro sim. Passed as URL params the
++ * Godot build parses via JavaScriptBridge / OS.get_cmdline_args().
++ */
++
++import { useState } from "react";
++import { Rocket, Monitor, Download, ChevronDown, Info } from "lucide-react";
++
++export interface SimJob {
++  sqft?: number;
++  coats?: number;
++  surface?: "wall" | "ceiling" | "both";
++  robotId?: string;
++  source?: string; // which page launched it, for analytics
++}
++
++const WEB_URL = process.env.NEXT_PUBLIC_PRO_SIM_URL; // undefined until built
++const DESKTOP_BASE = process.env.NEXT_PUBLIC_PRO_SIM_DESKTOP; // release folder/URL
++
++function toQuery(job: SimJob): string {
++  const p = new URLSearchParams();
++  Object.entries(job).forEach(([k, v]) => v != null && p.set(k, String(v)));
++  return p.toString();
++}
++
++export function ProSimulatorLauncher({
++  job = {},
++  variant = "hero",
++}: {
++  job?: SimJob;
++  variant?: "hero" | "inline";
++}) {
++  const [open, setOpen] = useState(false);
++  const available = Boolean(WEB_URL);
++  const q = toQuery({ ...job, source: job.source ?? "web" });
++
++  function launchWeb() {
++    if (!WEB_URL) return;
++    window.open(`${WEB_URL}?${q}`, "_blank", "noopener");
++  }
++
++  function launchDesktop(os: "win" | "mac" | "linux") {
++    // Prefer a deep link if the app is installed; fall back to the download.
++    const dl =
++      DESKTOP_BASE &&
++      `${DESKTOP_BASE}/PaintForgeProSim-${os}.${os === "win" ? "exe" : os === "mac" ? "dmg" : "AppImage"}`;
++    if (dl) window.location.href = dl;
++    else window.open(`paintforge://sim?${q}`, "_self");
++  }
++
++  const hero = variant === "hero";
++
++  return (
++    <div className={hero ? "relative inline-flex flex-col items-start" : "relative inline-flex"}>
++      <div className="inline-flex rounded-xl overflow-hidden shadow-lg">
++        <button
++          type="button"
++          onClick={available ? launchWeb : undefined}
++          disabled={!available}
++          className={`inline-flex items-center gap-2 font-semibold px-5 py-3 transition-colors ${
++            available
++              ? "bg-[#FF6B35] text-white hover:bg-[#E85D04]"
++              : "bg-[#F1F5F9] text-[#64748B] cursor-not-allowed"
++          }`}
++        >
++          <Rocket className="w-4 h-4" />
++          Launch high-fidelity Pro Simulator
++        </button>
++        <button
++          type="button"
++          onClick={() => setOpen((o) => !o)}
++          className={`px-3 border-l ${
++            available ? "bg-[#FF6B35] text-white border-white/20 hover:bg-[#E85D04]" : "bg-[#F1F5F9] text-[#64748B] border-[#E2E8F0]"
++          }`}
++          aria-label="Launch options"
++        >
++          <ChevronDown className="w-4 h-4" />
++        </button>
++      </div>
++
++      {open && (
++        <div className="absolute top-full left-0 mt-2 w-72 z-20 rounded-xl border border-[#E2E8F0] bg-white shadow-xl p-2">
++          <button
++            type="button"
++            onClick={launchWeb}
++            disabled={!available}
++            className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-[#F8FAFC] flex items-start gap-3 disabled:opacity-50"
++          >
++            <Monitor className="w-4 h-4 mt-0.5 text-[#FF6B35]" />
++            <span>
++              <span className="block font-medium text-[#0A2540] text-sm">Run in browser</span>
++              <span className="block text-xs text-[#64748B]">Godot web build · no install</span>
++            </span>
++          </button>
++          <div className="h-px bg-[#F1F5F9] my-1" />
++          {(["win", "mac", "linux"] as const).map((os) => (
++            <button
++              key={os}
++              type="button"
++              onClick={() => launchDesktop(os)}
++              disabled={!DESKTOP_BASE}
++              className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-[#F8FAFC] flex items-start gap-3 disabled:opacity-50"
++            >
++              <Download className="w-4 h-4 mt-0.5 text-[#FF6B35]" />
++              <span className="block font-medium text-[#0A2540] text-sm">
++                Desktop · {os === "win" ? "Windows" : os === "mac" ? "macOS" : "Linux"}
++              </span>
++            </button>
++          ))}
++        </div>
++      )}
++
++      {hero && (
++        <p className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-[#64748B]">
++          <Info className="w-3.5 h-3.5" />
++          {available
++            ? "Full mechanical inspection + realistic task sim. Carries your current job settings."
++            : "Pro Simulator is in active development — the web preview above shows what ships first."}
++        </p>
++      )}
++    </div>
++  );
++}
++
++export default ProSimulatorLauncher;
+diff --git a/components/RobotShowcase.tsx b/components/RobotShowcase.tsx
+new file mode 100644
+index 0000000..984351b
+--- /dev/null
++++ b/components/RobotShowcase.tsx
+@@ -0,0 +1,614 @@
++"use client";
++
++/**
++ * RobotShowcase — the "transparent, alive" web digital-twin preview.
++ *
++ * This is PaintForge's OWN concept machine (PF-1 InteriorFinish unit): a mobile
++ * base + vertical lift mast + articulated spray head. It is deliberately NOT one
++ * of the third-party reference arms in lib/robots.ts. Everything shown here is a
++ * concept/target — no hardware is deployed. Keep it labelled that way.
++ *
++ * What you can inspect:
++ *   • Solid   — normal shells.
++ *   • Cutaway — a real clipping plane slices only the OUTER shells, exposing the
++ *               drive motors, lift screw, gearbox and paint pump in cross-section.
++ *   • Exploded— every subassembly translates along its own axis.
++ *   • Slow-mo — internal animation (rotors, gears, pump piston) runs at 0.15×.
++ *
++ * Requires: @react-three/fiber @react-three/drei three (three is already in deps).
++ *   npm i @react-three/fiber @react-three/drei
++ *
++ * Import it dynamically with ssr:false (see /raas, /saas, /dashboard).
++ */
++
++import { useMemo, useRef, useState, useCallback } from "react";
++import { Canvas, useFrame } from "@react-three/fiber";
++import { OrbitControls, ContactShadows, Html, Edges } from "@react-three/drei";
++import * as THREE from "three";
++import {
++  Play,
++  Pause,
++  RotateCcw,
++  Scissors,
++  Layers,
++  Gauge,
++  Tag,
++  Boxes,
++} from "lucide-react";
++
++/* ---------------------------------------------------------------- palette */
++const NAVY = "#0A2540";
++const ORANGE = "#FF6B35";
++const STEEL = "#8A97A8";
++const COPPER = "#C77B3B";
++const PAINT = "#3B7DD8";
++
++type Mode = "solid" | "cutaway" | "exploded";
++
++/* A single vertical clipping plane. In cutaway mode it is attached ONLY to the
++ * outer-shell materials, so the internals are never clipped — you look straight
++ * into the machine. Normal (-1,0,0), constant 0 → removes the x>0 half of shells. */
++function useCutPlane() {
++  return useMemo(() => new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0), []);
++}
++
++/* --------------------------------------------------------------- primitives */
++
++/** Outer shell: clippable, ghost-edged, so it reads as a housing you see through. */
++function Shell({
++  mode,
++  plane,
++  color = STEEL,
++  opacity = 1,
++  children,
++  ...mesh
++}: {
++  mode: Mode;
++  plane: THREE.Plane;
++  color?: string;
++  opacity?: number;
++  children: React.ReactNode;
++} & React.ComponentProps<"mesh">) {
++  const cut = mode === "cutaway";
++  return (
++    <mesh castShadow receiveShadow {...mesh}>
++      {children}
++      <meshStandardMaterial
++        color={color}
++        metalness={0.65}
++        roughness={0.35}
++        transparent={cut || opacity < 1}
++        opacity={cut ? 0.9 : opacity}
++        side={cut ? THREE.DoubleSide : THREE.FrontSide}
++        clippingPlanes={cut ? [plane] : []}
++        clipShadows
++      />
++      <Edges threshold={22} color={cut ? ORANGE : "#40506A"} />
++    </mesh>
++  );
++}
++
++/** Internal metal part — never clipped, so it stays visible in cutaway. */
++function Part({
++  color = STEEL,
++  metalness = 0.9,
++  roughness = 0.35,
++  children,
++  ...mesh
++}: {
++  color?: string;
++  metalness?: number;
++  roughness?: number;
++  children: React.ReactNode;
++} & React.ComponentProps<"mesh">) {
++  return (
++    <mesh castShadow {...mesh}>
++      {children}
++      <meshStandardMaterial color={color} metalness={metalness} roughness={roughness} />
++    </mesh>
++  );
++}
++
++/** BLDC-style motor: stator can (shell) + spinning rotor with visible windings. */
++function Motor({
++  mode,
++  plane,
++  rpm,
++  showLabels,
++  label,
++  ...group
++}: {
++  mode: Mode;
++  plane: THREE.Plane;
++  rpm: number;
++  showLabels: boolean;
++  label?: string;
++} & React.ComponentProps<"group">) {
++  const rotor = useRef<THREE.Group>(null);
++  useFrame((_, dt) => {
++    if (rotor.current) rotor.current.rotation.z += rpm * dt;
++  });
++  return (
++    <group {...group}>
++      {/* stator can */}
++      <Shell mode={mode} plane={plane} color="#5B6675" rotation={[Math.PI / 2, 0, 0]}>
++        <cylinderGeometry args={[0.16, 0.16, 0.34, 28]} />
++      </Shell>
++      {/* rotor + laminations + winding pegs */}
++      <group ref={rotor}>
++        <Part color={COPPER} rotation={[Math.PI / 2, 0, 0]}>
++          <cylinderGeometry args={[0.11, 0.11, 0.36, 24]} />
++        </Part>
++        {Array.from({ length: 8 }).map((_, i) => {
++          const a = (i / 8) * Math.PI * 2;
++          return (
++            <Part
++              key={i}
++              color="#3A2A18"
++              position={[Math.cos(a) * 0.13, Math.sin(a) * 0.13, 0]}
++              rotation={[Math.PI / 2, 0, 0]}
++            >
++              <boxGeometry args={[0.03, 0.34, 0.05]} />
++            </Part>
++          );
++        })}
++        {/* shaft */}
++        <Part color="#C9D2DE" rotation={[Math.PI / 2, 0, 0]}>
++          <cylinderGeometry args={[0.03, 0.03, 0.6, 16]} />
++        </Part>
++      </group>
++      {showLabels && label && <Pin y={0.28}>{label}</Pin>}
++    </group>
++  );
++}
++
++/** Two meshing spur gears turning opposite directions. */
++function Gearbox({
++  mode,
++  plane,
++  rpm,
++  showLabels,
++  ...group
++}: {
++  mode: Mode;
++  plane: THREE.Plane;
++  rpm: number;
++  showLabels: boolean;
++} & React.ComponentProps<"group">) {
++  const a = useRef<THREE.Group>(null);
++  const b = useRef<THREE.Group>(null);
++  useFrame((_, dt) => {
++    if (a.current) a.current.rotation.z += rpm * dt;
++    if (b.current) b.current.rotation.z -= rpm * dt * (18 / 12); // ratio
++  });
++  const gear = (teeth: number, r: number) => (
++    <>
++      <Part color="#9AA6B4" rotation={[Math.PI / 2, 0, 0]}>
++        <cylinderGeometry args={[r, r, 0.09, 30]} />
++      </Part>
++      {Array.from({ length: teeth }).map((_, i) => {
++        const t = (i / teeth) * Math.PI * 2;
++        return (
++          <Part key={i} color="#B7C2CF" position={[Math.cos(t) * (r + 0.02), Math.sin(t) * (r + 0.02), 0]}>
++            <boxGeometry args={[0.05, 0.05, 0.09]} />
++          </Part>
++        );
++      })}
++    </>
++  );
++  return (
++    <group {...group}>
++      {/* gearbox housing (shell, clippable) */}
++      <Shell mode={mode} plane={plane} color="#48525F">
++        <boxGeometry args={[0.7, 0.5, 0.22]} />
++      </Shell>
++      <group ref={a} position={[-0.16, 0, 0.14]}>{gear(18, 0.18)}</group>
++      <group ref={b} position={[0.18, 0, 0.14]}>{gear(12, 0.12)}</group>
++      {showLabels && <Pin y={0.34}>Yaw gearbox 18:12</Pin>}
++    </group>
++  );
++}
++
++/** Positive-displacement paint pump with a reciprocating piston. */
++function PaintPump({
++  mode,
++  plane,
++  rpm,
++  showLabels,
++  ...group
++}: {
++  mode: Mode;
++  plane: THREE.Plane;
++  rpm: number;
++  showLabels: boolean;
++} & React.ComponentProps<"group">) {
++  const piston = useRef<THREE.Mesh>(null);
++  useFrame((s) => {
++    if (piston.current)
++      piston.current.position.y = -0.02 + Math.sin(s.clock.elapsedTime * rpm) * 0.08;
++  });
++  return (
++    <group {...group}>
++      <Shell mode={mode} plane={plane} color="#3D4753">
++        <cylinderGeometry args={[0.13, 0.13, 0.34, 24]} />
++      </Shell>
++      <Part ref={piston} color="#E2E8F0">
++        <cylinderGeometry args={[0.09, 0.09, 0.16, 20]} />
++      </Part>
++      {/* fluid section + check valves */}
++      <Part color={PAINT} position={[0, -0.22, 0]}>
++        <cylinderGeometry args={[0.07, 0.07, 0.12, 16]} />
++      </Part>
++      {showLabels && <Pin y={0.3}>Paint pump (2-ball)</Pin>}
++    </group>
++  );
++}
++
++/** A wiring harness rendered as a tube — small but it makes it read as "alive". */
++function Wire({ points, color = "#E4572E", r = 0.012 }: { points: THREE.Vector3[]; color?: string; r?: number }) {
++  const geom = useMemo(() => {
++    const curve = new THREE.CatmullRomCurve3(points);
++    return new THREE.TubeGeometry(curve, 40, r, 8, false);
++  }, [points, r]);
++  return (
++    <mesh geometry={geom}>
++      <meshStandardMaterial color={color} roughness={0.6} metalness={0.1} />
++    </mesh>
++  );
++}
++
++function Pin({ y, children }: { y: number; children: React.ReactNode }) {
++  return (
++    <Html position={[0, y, 0]} center distanceFactor={7} occlude>
++      <div
++        style={{
++          background: "rgba(10,37,64,0.92)",
++          color: "#fff",
++          font: "600 11px/1.1 ui-monospace,monospace",
++          padding: "3px 7px",
++          borderRadius: 6,
++          border: `1px solid ${ORANGE}`,
++          whiteSpace: "nowrap",
++          transform: "translateY(-4px)",
++        }}
++      >
++        {children}
++      </div>
++    </Html>
++  );
++}
++
++/* ------------------------------------------------------------- coverage wall */
++
++const COLS = 18;
++const ROWS = 11;
++// Boustrophedon order: sweep each row, alternating direction.
++const ORDER = (() => {
++  const o: [number, number][] = [];
++  for (let r = 0; r < ROWS; r++) {
++    const cols = r % 2 === 0 ? [...Array(COLS).keys()] : [...Array(COLS).keys()].reverse();
++    for (const c of cols) o.push([c, r]);
++  }
++  return o;
++})();
++
++function Wall({ painted }: { painted: number }) {
++  const cw = 3.6 / COLS;
++  const ch = 2.4 / ROWS;
++  return (
++    <group position={[0, 1.4, -1.15]}>
++      <mesh receiveShadow>
++        <planeGeometry args={[3.7, 2.5]} />
++        <meshStandardMaterial color="#EEF1F5" roughness={0.95} />
++      </mesh>
++      {ORDER.slice(0, painted).map(([c, r], i) => (
++        <mesh key={i} position={[-1.8 + cw * (c + 0.5), -1.2 + ch * (r + 0.5), 0.01]}>
++          <planeGeometry args={[cw * 0.98, ch * 0.98]} />
++          <meshStandardMaterial color={PAINT} roughness={0.7} />
++        </mesh>
++      ))}
++    </group>
++  );
++}
++
++/* --------------------------------------------------------------- the robot */
++
++function Robot({
++  mode,
++  running,
++  slow,
++  showLabels,
++  onCoverage,
++}: {
++  mode: Mode;
++  running: boolean;
++  slow: boolean;
++  showLabels: boolean;
++  onCoverage: (pct: number) => void;
++}) {
++  const plane = useCutPlane();
++  const speed = slow ? 0.15 : 1;
++  const rot = useRef({ head: 0 });
++  const paintedRef = useRef(0);
++  const head = useRef<THREE.Group>(null);
++
++  // explode offsets (0 solid, 1 exploded)
++  const ex = mode === "exploded" ? 1 : 0;
++
++  useFrame((_, dt) => {
++    if (!running) return;
++    // advance coverage
++    const total = COLS * ROWS;
++    paintedRef.current = Math.min(total, paintedRef.current + dt * speed * 6);
++    const idx = Math.floor(paintedRef.current);
++    onCoverage(Math.min(100, (paintedRef.current / total) * 100));
++    // track the current cell with the spray head (yaw + pitch)
++    const cell = ORDER[Math.min(idx, total - 1)];
++    if (head.current && cell) {
++      const tx = -1.8 + (3.6 / COLS) * (cell[0] + 0.5);
++      const ty = 1.4 + (-1.2 + (2.4 / ROWS) * (cell[1] + 0.5));
++      head.current.rotation.y = Math.atan2(tx, 1.0) * 0.6;
++      head.current.rotation.x = -Math.atan2(ty - 1.9, 1.0) * 0.5;
++    }
++  });
++
++  const painted = Math.floor(paintedRef.current);
++
++  return (
++    <group>
++      <Wall painted={painted} />
++
++      {/* ============ BASE (drive + power + control) ============ */}
++      <group position={[0, 0.28 - ex * 0.15, 0]}>
++        <Shell mode={mode} plane={plane} color={NAVY}>
++          <boxGeometry args={[1.3, 0.42, 0.95]} />
++        </Shell>
++        {/* drive motors */}
++        <Motor mode={mode} plane={plane} rpm={running ? 9 * speed : 0} showLabels={showLabels}
++          label="Drive rotor" position={[-0.45, -0.02, 0.28 + ex * 0.4]} />
++        <Motor mode={mode} plane={plane} rpm={running ? 9 * speed : 0} showLabels={false}
++          position={[0.45, -0.02, 0.28 + ex * 0.4]} />
++        {/* wheels */}
++        {[-0.55, 0.55].map((x) =>
++          [-0.42, 0.42].map((z) => (
++            <Part key={`${x}${z}`} color="#1B2430" position={[x, -0.24, z]} rotation={[0, 0, Math.PI / 2]}>
++              <cylinderGeometry args={[0.18, 0.18, 0.12, 20]} />
++            </Part>
++          ))
++        )}
++        {/* battery pack */}
++        <Part color="#2E7D46" position={[0, -0.02, -0.28 - ex * 0.35]}>
++          <boxGeometry args={[0.8, 0.22, 0.24]} />
++        </Part>
++        {showLabels && <group position={[0, -0.02, -0.28 - ex * 0.35]}><Pin y={0.22}>48V battery</Pin></group>}
++        {/* control PCB */}
++        <Part color="#12351F" metalness={0.2} roughness={0.7} position={[0.1, 0.12 + ex * 0.5, 0]}>
++          <boxGeometry args={[0.5, 0.02, 0.3]} />
++        </Part>
++        {showLabels && <group position={[0.1, 0.12 + ex * 0.5, 0]}><Pin y={0.12}>Motion controller</Pin></group>}
++        {/* wiring harness */}
++        <Wire points={[
++          new THREE.Vector3(-0.45, 0.02, 0.28),
++          new THREE.Vector3(-0.1, 0.1, 0.1),
++          new THREE.Vector3(0.1, 0.13, 0),
++          new THREE.Vector3(0.35, 0.15, -0.2),
++        ]} />
++      </group>
++
++      {/* ============ COLUMN (lift mast + lead screw) ============ */}
++      <group position={[0, 1.05 + ex * 0.2, -0.1]}>
++        <Shell mode={mode} plane={plane} color="#37414E">
++          <boxGeometry args={[0.34, 1.5, 0.34]} />
++        </Shell>
++        {/* lead screw */}
++        <LeadScrew rpm={running ? 6 * speed : 0} />
++        {/* carriage */}
++        <Part color="#C9D2DE" position={[0, 0.1, 0.2]}>
++          <boxGeometry args={[0.4, 0.24, 0.14]} />
++        </Part>
++        {/* lift motor at top */}
++        <Motor mode={mode} plane={plane} rpm={running ? 6 * speed : 0} showLabels={showLabels}
++          label="Lift servo" position={[0, 0.85 + ex * 0.3, 0]} rotation={[Math.PI / 2, 0, 0]} />
++        {showLabels && <Pin y={0.9}>Lift mast · ball-screw</Pin>}
++      </group>
++
++      {/* ============ HEAD (gearbox + pump + nozzle) ============ */}
++      <group ref={head} position={[0, 1.9, 0.15 + ex * 0.5]}>
++        <Gearbox mode={mode} plane={plane} rpm={running ? 5 * speed : 0} showLabels={showLabels}
++          position={[0, 0, -0.15]} />
++        <PaintPump mode={mode} plane={plane} rpm={running ? 10 * speed : 0} showLabels={showLabels}
++          position={[0.15 + ex * 0.3, 0, 0.15]} />
++        {/* nozzle */}
++        <Part color="#0B1622" position={[0, -0.12, 0.4]} rotation={[Math.PI / 2, 0, 0]}>
++          <coneGeometry args={[0.05, 0.16, 16]} />
++        </Part>
++        {/* paint feed hose */}
++        <Wire color={PAINT} r={0.018} points={[
++          new THREE.Vector3(0.15, -0.1, 0.15),
++          new THREE.Vector3(0.08, -0.14, 0.28),
++          new THREE.Vector3(0, -0.12, 0.4),
++        ]} />
++        {/* spray cone (only while running & not exploded) */}
++        {running && mode !== "exploded" && (
++          <mesh position={[0, -0.12, 0.85]} rotation={[Math.PI / 2, 0, 0]}>
++            <coneGeometry args={[0.32, 0.9, 20, 1, true]} />
++            <meshBasicMaterial color={PAINT} transparent opacity={0.14} side={THREE.DoubleSide} />
++          </mesh>
++        )}
++        {showLabels && <Pin y={0.28}>HVLP spray head</Pin>}
++      </group>
++    </group>
++  );
++}
++
++function LeadScrew({ rpm }: { rpm: number }) {
++  const ref = useRef<THREE.Group>(null);
++  useFrame((_, dt) => {
++    if (ref.current) ref.current.rotation.y += rpm * dt;
++  });
++  return (
++    <group ref={ref}>
++      <mesh castShadow>
++        <cylinderGeometry args={[0.05, 0.05, 1.4, 16]} />
++        <meshStandardMaterial color="#DDE4EC" metalness={0.9} roughness={0.25} />
++      </mesh>
++      {Array.from({ length: 20 }).map((_, i) => (
++        <mesh key={i} position={[0, -0.66 + i * 0.07, 0]} rotation={[Math.PI / 2, 0, 0]}>
++          <torusGeometry args={[0.055, 0.012, 8, 20]} />
++          <meshStandardMaterial color="#AEB8C4" metalness={0.85} roughness={0.3} />
++        </mesh>
++      ))}
++    </group>
++  );
++}
++
++/* ------------------------------------------------------------------- panel */
++
++export function RobotShowcase() {
++  const [mode, setMode] = useState<Mode>("cutaway");
++  const [running, setRunning] = useState(true);
++  const [slow, setSlow] = useState(false);
++  const [labels, setLabels] = useState(true);
++  const [coverage, setCoverage] = useState(0);
++  const [resetKey, setResetKey] = useState(0);
++
++  const rafPending = useRef(false);
++  const onCoverage = useCallback((v: number) => {
++    if (rafPending.current) return;
++    rafPending.current = true;
++    requestAnimationFrame(() => {
++      rafPending.current = false;
++      setCoverage(v);
++    });
++  }, []);
++
++  function reset() {
++    setResetKey((k) => k + 1);
++    setCoverage(0);
++    setRunning(true);
++  }
++
++  const modeBtn = (m: Mode, icon: React.ReactNode, text: string) => (
++    <button
++      type="button"
++      onClick={() => setMode(m)}
++      className={`text-xs font-semibold rounded-full px-3 py-1.5 border inline-flex items-center gap-1.5 transition-colors ${
++        mode === m
++          ? "bg-[#0A2540] text-white border-[#0A2540]"
++          : "bg-white text-[#475569] border-[#E2E8F0] hover:border-[#CBD5E1]"
++      }`}
++    >
++      {icon}
++      {text}
++    </button>
++  );
++
++  return (
++    <div className="rounded-3xl overflow-hidden border border-[#E2E8F0] bg-white shadow-xl">
++      <div className="grid lg:grid-cols-[1.7fr_1fr]">
++        {/* viewport */}
++        <div className="relative bg-gradient-to-br from-[#0A2540] via-[#0D2B4A] to-[#081C33] min-h-[420px] lg:min-h-[600px]">
++          <Canvas
++            key={resetKey}
++            shadows
++            dpr={[1, 2]}
++            gl={{ localClippingEnabled: true, antialias: true }}
++            camera={{ position: [3.4, 2.3, 3.8], fov: 42 }}
++          >
++            <hemisphereLight intensity={0.7} groundColor="#0A2540" />
++            <directionalLight position={[4, 6, 3]} intensity={2.1} castShadow shadow-mapSize={[1024, 1024]} />
++            <directionalLight position={[-4, 3, -2]} intensity={0.6} color={ORANGE} />
++            <Robot mode={mode} running={running} slow={slow} showLabels={labels} onCoverage={onCoverage} />
++            <ContactShadows position={[0, 0.02, 0]} opacity={0.5} scale={9} blur={2.4} far={4} />
++            <OrbitControls
++              enablePan={false}
++              minDistance={3}
++              maxDistance={9}
++              maxPolarAngle={Math.PI / 2.05}
++              target={[0, 1.1, 0]}
++            />
++          </Canvas>
++
++          <div className="absolute top-4 left-4 right-4 flex flex-wrap items-center gap-2 pointer-events-none">
++            <span className="text-[11px] font-mono tracking-widest uppercase text-white/70 bg-white/5 border border-white/10 rounded-full px-3 py-1">
++              PF-1 · Digital twin (concept)
++            </span>
++            <span className="text-[11px] font-mono rounded-full px-3 py-1 border" style={{ color: "#FF9A6B", borderColor: "rgba(255,107,53,0.3)", background: "rgba(255,107,53,0.1)" }}>
++              {mode === "cutaway" ? "Cross-section" : mode === "exploded" ? "Exploded" : "Assembled"}
++            </span>
++            <span className="ml-auto text-[11px] text-white/50 bg-white/5 border border-white/10 rounded-full px-3 py-1">
++              Drag to orbit · scroll to zoom
++            </span>
++          </div>
++
++          <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-white/10">
++            <div className="h-full bg-[#FF6B35] transition-[width] duration-150" style={{ width: `${coverage}%` }} />
++          </div>
++          <div className="absolute bottom-4 left-4 text-white/70 text-[11px] font-mono bg-white/5 border border-white/10 rounded-full px-3 py-1">
++            Coverage {coverage.toFixed(0)}% · boustrophedon plan
++          </div>
++        </div>
++
++        {/* controls */}
++        <div className="p-6 flex flex-col">
++          <div className="kicker mb-3">INSPECT THE MACHINE</div>
++          <p className="text-sm text-[#475569] mb-4">
++            This is the PaintForge concept unit rendered as an inspectable twin. Slice it open,
++            explode it, or watch the internals move. Every part shown is a design target.
++          </p>
++
++          <div className="text-[10px] uppercase tracking-wider text-[#64748B] mb-2">View</div>
++          <div className="flex flex-wrap gap-2 mb-5">
++            {modeBtn("solid", <Boxes className="w-3.5 h-3.5" />, "Assembled")}
++            {modeBtn("cutaway", <Scissors className="w-3.5 h-3.5" />, "Cutaway")}
++            {modeBtn("exploded", <Layers className="w-3.5 h-3.5" />, "Exploded")}
++          </div>
++
++          <div className="text-[10px] uppercase tracking-wider text-[#64748B] mb-2">Motion</div>
++          <div className="flex flex-wrap gap-2 mb-6">
++            <button type="button" onClick={() => setRunning((r) => !r)}
++              className="text-xs font-semibold rounded-full px-3 py-1.5 border inline-flex items-center gap-1.5 bg-white text-[#475569] border-[#E2E8F0] hover:border-[#CBD5E1]">
++              {running ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
++              {running ? "Pause" : "Run"}
++            </button>
++            <button type="button" onClick={() => setSlow((s) => !s)}
++              className={`text-xs font-semibold rounded-full px-3 py-1.5 border inline-flex items-center gap-1.5 ${slow ? "bg-[#0A2540] text-white border-[#0A2540]" : "bg-white text-[#475569] border-[#E2E8F0] hover:border-[#CBD5E1]"}`}>
++              <Gauge className="w-3.5 h-3.5" /> Slow-mo 0.15×
++            </button>
++            <button type="button" onClick={() => setLabels((l) => !l)}
++              className={`text-xs font-semibold rounded-full px-3 py-1.5 border inline-flex items-center gap-1.5 ${labels ? "bg-[#0A2540] text-white border-[#0A2540]" : "bg-white text-[#475569] border-[#E2E8F0] hover:border-[#CBD5E1]"}`}>
++              <Tag className="w-3.5 h-3.5" /> Labels
++            </button>
++            <button type="button" onClick={reset}
++              className="text-xs font-semibold rounded-full px-3 py-1.5 border inline-flex items-center gap-1.5 bg-white text-[#475569] border-[#E2E8F0] hover:border-[#CBD5E1]">
++              <RotateCcw className="w-3.5 h-3.5" /> Reset
++            </button>
++          </div>
++
++          <dl className="grid grid-cols-2 gap-x-5 gap-y-2.5 text-sm mb-5">
++            {[
++              ["Drive", "2× BLDC hub"],
++              ["Lift", "Ball-screw mast"],
++              ["Wrist", "Yaw gearbox 18:12"],
++              ["Applicator", "HVLP spray head"],
++              ["Power", "48V pack"],
++              ["Plan", "Boustrophedon"],
++            ].map(([k, v]) => (
++              <div key={k} className="flex flex-col">
++                <dt className="text-[10px] uppercase tracking-wider text-[#64748B]">{k}</dt>
++                <dd className="font-medium text-[#0A2540] tabular-nums">{v}</dd>
++              </div>
++            ))}
++          </dl>
++
++          <div className="mt-auto rounded-xl bg-[#FFF7ED] border border-[#FFD9C2] p-3 text-[12px] text-[#9A4B24]">
++            Concept geometry, not a manufactured product or live robot feed. Dimensions and
++            components are design targets that pilot partners will help finalise.
++          </div>
++        </div>
++      </div>
++    </div>
++  );
++}
++
++export default RobotShowcase;
+diff --git a/components/RobotShowcaseMount.tsx b/components/RobotShowcaseMount.tsx
+new file mode 100644
+index 0000000..bf75485
+--- /dev/null
++++ b/components/RobotShowcaseMount.tsx
+@@ -0,0 +1,23 @@
++"use client";
++
++// SSR-safe boundary for the R3F showcase. Server pages import THIS, not
++// RobotShowcase directly, because @react-three/fiber's <Canvas> can't render on
++// the server. Mirrors how RobotCellShowcase loads RobotCell3D.
++
++import dynamic from "next/dynamic";
++
++const RobotShowcase = dynamic(
++  () => import("@/components/RobotShowcase").then((m) => m.RobotShowcase),
++  {
++    ssr: false,
++    loading: () => (
++      <div className="rounded-3xl border border-[#E2E8F0] bg-[#0A2540] min-h-[420px] lg:min-h-[600px] flex items-center justify-center text-white/40 text-sm">
++        Loading digital twin…
++      </div>
++    ),
++  }
++);
++
++export default function RobotShowcaseMount() {
++  return <RobotShowcase />;
++}
+diff --git a/godot/Main.gd b/godot/Main.gd
+new file mode 100644
+index 0000000..a15d476
+--- /dev/null
++++ b/godot/Main.gd
+@@ -0,0 +1,343 @@
++extends Node3D
++## PaintForge Pro Simulator — scaffold.
++##
++## Builds the PF-1 concept unit procedurally (base + lift mast + spray head) so
++## the project RUNS before any Blender assets exist. Replace the procedural
++## primitives with imported .glb subassemblies (see godot/README.md) once the
++## detailed internals are modelled — the animation, cutaway, explode and job
++## wiring below keep working with named nodes.
++##
++## Controls:  P run/pause · C cutaway · X explode · Z slow-mo · Space next camera
++## Job params arrive from the web query string or desktop CLI (see _read_job()).
++
++# ---- tunables ----------------------------------------------------------------
++const COLS := 18
++const ROWS := 11
++const PAINT := Color(0.231, 0.490, 0.847)
++const ORANGE := Color(1.0, 0.42, 0.208)
++const NAVY := Color(0.039, 0.145, 0.251)
++
++var running := true
++var cutaway := false
++var exploded := false
++var slowmo := false
++var speed := 1.0
++
++var base: Node3D
++var column: Node3D
++var head: Node3D
++var rotors: Array[Node3D] = []
++var gears: Array[Dictionary] = []      # {node, dir}
++var piston: MeshInstance3D
++var lead_screw: Node3D
++var cut_boxes: Array[CSGBox3D] = []     # subtraction volumes toggled by cutaway
++var explode_targets: Array[Dictionary] = []  # {node, solid:Vector3, blown:Vector3}
++
++var wall_cells: Array[MeshInstance3D] = []
++var order: Array[Vector2i] = []
++var painted := 0.0
++
++var cameras: Array[Camera3D] = []
++var cam_index := 0
++
++var hud: Label
++var job := {}
++
++# ------------------------------------------------------------------------------
++func _ready() -> void:
++	job = _read_job()
++	_build_environment()
++	_build_robot()
++	_build_wall()
++	_build_cameras()
++	_build_hud()
++	_apply_job()
++
++func _process(delta: float) -> void:
++	var dt := delta * (0.15 if slowmo else 1.0)
++	# spin every rotor / gear / screw
++	if running:
++		for r in rotors:
++			r.rotate_z(9.0 * dt)
++		for g in gears:
++			g.node.rotate_z(g.dir * 6.0 * dt)
++		if lead_screw:
++			lead_screw.rotate_y(6.0 * dt)
++		if piston:
++			piston.position.y = -0.02 + sin(Time.get_ticks_msec() * 0.01 * (0.15 if slowmo else 1.0)) * 0.08
++		_advance_coverage(dt)
++	# smoothly move explode targets
++	for e in explode_targets:
++		var goal: Vector3 = e.blown if exploded else e.solid
++		e.node.position = e.node.position.lerp(goal, delta * 6.0)
++	_update_hud()
++
++func _unhandled_input(_e: InputEvent) -> void:
++	if Input.is_action_just_pressed("toggle_run"): running = not running
++	if Input.is_action_just_pressed("toggle_cutaway"): _set_cutaway(not cutaway)
++	if Input.is_action_just_pressed("toggle_explode"): exploded = not exploded
++	if Input.is_action_just_pressed("toggle_slowmo"): slowmo = not slowmo
++	if Input.is_action_just_pressed("cam_next"): _next_camera()
++
++# ---- environment -------------------------------------------------------------
++func _build_environment() -> void:
++	var env := WorldEnvironment.new()
++	var e := Environment.new()
++	e.background_mode = Environment.BG_COLOR
++	e.background_color = NAVY
++	e.ambient_light_color = Color(0.35, 0.45, 0.6)
++	e.ambient_light_energy = 0.6
++	env.environment = e
++	add_child(env)
++
++	var key := DirectionalLight3D.new()
++	key.rotation_degrees = Vector3(-50, -40, 0)
++	key.light_energy = 1.8
++	key.shadow_enabled = true
++	add_child(key)
++
++	var rim := DirectionalLight3D.new()
++	rim.rotation_degrees = Vector3(-20, 140, 0)
++	rim.light_color = ORANGE
++	rim.light_energy = 0.5
++	add_child(rim)
++
++	var floor := MeshInstance3D.new()
++	var pm := PlaneMesh.new(); pm.size = Vector2(10, 10)
++	floor.mesh = pm
++	floor.material_override = _mat(Color(0.09, 0.13, 0.2), 0.1, 0.9)
++	add_child(floor)
++
++# ---- robot -------------------------------------------------------------------
++func _build_robot() -> void:
++	# BASE ---------------------------------------------------------------------
++	base = Node3D.new(); base.position = Vector3(0, 0.28, 0); add_child(base)
++	_shell(base, _box(1.3, 0.42, 0.95), Vector3.ZERO, NAVY)
++	# drive motors (rotors spin)
++	for x in [-0.45, 0.45]:
++		var m := _motor(base, Vector3(x, -0.02, 0.28))
++		_explode(m, Vector3(x, -0.02, 0.28), Vector3(x, -0.02, 0.7))
++	# battery + controller (internals stay visible in cutaway)
++	var batt := _part(base, _box(0.8, 0.22, 0.24), Vector3(0, -0.02, -0.28), Color(0.18, 0.49, 0.27))
++	_explode(batt, Vector3(0, -0.02, -0.28), Vector3(0, -0.02, -0.65))
++	_part(base, _box(0.5, 0.02, 0.3), Vector3(0.1, 0.12, 0), Color(0.07, 0.21, 0.12))
++	# wheels
++	for x in [-0.55, 0.55]:
++		for z in [-0.42, 0.42]:
++			_part(base, _cyl(0.18, 0.12), Vector3(x, -0.24, z), Color(0.1, 0.14, 0.19), Vector3(0, 0, 90))
++
++	# COLUMN -------------------------------------------------------------------
++	column = Node3D.new(); column.position = Vector3(0, 1.05, -0.1); add_child(column)
++	_shell(column, _box(0.34, 1.5, 0.34), Vector3.ZERO, Color(0.22, 0.25, 0.30))
++	lead_screw = _lead_screw(column)
++	_explode(column, Vector3(0, 1.05, -0.1), Vector3(0, 1.15, -0.1))
++
++	# HEAD ---------------------------------------------------------------------
++	head = Node3D.new(); head.position = Vector3(0, 1.9, 0.15); add_child(head)
++	_gearbox(head, Vector3(0, 0, -0.15))
++	_pump(head, Vector3(0.15, 0, 0.15))
++	_part(head, _cone(0.05, 0.16), Vector3(0, -0.12, 0.4), Color(0.04, 0.09, 0.14), Vector3(90, 0, 0))
++	_explode(head, Vector3(0, 1.9, 0.15), Vector3(0, 1.9, 0.6))
++
++# a CSG shell that the cutaway box carves open
++func _shell(parent: Node3D, mesh_res, pos: Vector3, col: Color) -> void:
++	var comb := CSGCombiner3D.new()
++	comb.position = pos
++	comb.use_collision = false
++	var shell := CSGMesh3D.new()
++	shell.mesh = mesh_res
++	shell.material = _mat(col, 0.65, 0.35)
++	comb.add_child(shell)
++	# subtraction volume (front-right quadrant) — enabled only in cutaway
++	var cut := CSGBox3D.new()
++	cut.size = Vector3(3, 3, 3)
++	cut.position = Vector3(1.5, 0, 1.5)
++	cut.operation = CSGShape3D.OPERATION_SUBTRACTION
++	cut.visible = false
++	comb.add_child(cut)
++	cut_boxes.append(cut)
++	parent.add_child(comb)
++
++func _motor(parent: Node3D, pos: Vector3) -> Node3D:
++	var g := Node3D.new(); g.position = pos; parent.add_child(g)
++	_shell(g, _cyl(0.16, 0.34), Vector3.ZERO, Color(0.36, 0.4, 0.46))
++	var rotor := Node3D.new(); g.add_child(rotor)
++	_part(rotor, _cyl(0.11, 0.36), Vector3.ZERO, Color(0.78, 0.48, 0.23), Vector3(90, 0, 0))
++	for i in 8:
++		var a := TAU * i / 8.0
++		_part(rotor, _box(0.03, 0.34, 0.05), Vector3(cos(a) * 0.13, sin(a) * 0.13, 0),
++			Color(0.23, 0.16, 0.09), Vector3(90, 0, 0))
++	_part(rotor, _cyl(0.03, 0.6), Vector3.ZERO, Color(0.79, 0.82, 0.87), Vector3(90, 0, 0))
++	rotors.append(rotor)
++	return g
++
++func _gearbox(parent: Node3D, pos: Vector3) -> void:
++	var g := Node3D.new(); g.position = pos; parent.add_child(g)
++	_shell(g, _box(0.7, 0.5, 0.22), Vector3.ZERO, Color(0.28, 0.32, 0.37))
++	gears.append({ "node": _gear(g, Vector3(-0.16, 0, 0.14), 18, 0.18), "dir": 1.0 })
++	gears.append({ "node": _gear(g, Vector3(0.18, 0, 0.14), 12, 0.12), "dir": -1.5 })
++
++func _gear(parent: Node3D, pos: Vector3, teeth: int, r: float) -> Node3D:
++	var g := Node3D.new(); g.position = pos; parent.add_child(g)
++	_part(g, _cyl(r, 0.09), Vector3.ZERO, Color(0.6, 0.65, 0.71), Vector3(90, 0, 0))
++	for i in teeth:
++		var t := TAU * i / teeth
++		_part(g, _box(0.05, 0.05, 0.09), Vector3(cos(t) * (r + 0.02), sin(t) * (r + 0.02), 0),
++			Color(0.72, 0.76, 0.81))
++	return g
++
++func _pump(parent: Node3D, pos: Vector3) -> void:
++	var g := Node3D.new(); g.position = pos; parent.add_child(g)
++	_shell(g, _cyl(0.13, 0.34), Vector3.ZERO, Color(0.24, 0.28, 0.33))
++	piston = _part(g, _cyl(0.09, 0.16), Vector3.ZERO, Color(0.89, 0.91, 0.94))
++	_part(g, _cyl(0.07, 0.12), Vector3(0, -0.22, 0), PAINT)
++
++func _lead_screw(parent: Node3D) -> Node3D:
++	var g := Node3D.new(); parent.add_child(g)
++	_part(g, _cyl(0.05, 1.4), Vector3.ZERO, Color(0.87, 0.89, 0.93))
++	for i in 20:
++		_part(g, _torus(0.055, 0.012), Vector3(0, -0.66 + i * 0.07, 0), Color(0.68, 0.72, 0.77), Vector3(90, 0, 0))
++	return g
++
++# ---- coverage wall -----------------------------------------------------------
++func _build_wall() -> void:
++	# boustrophedon order
++	for r in ROWS:
++		var cs := range(COLS) if r % 2 == 0 else range(COLS - 1, -1, -1)
++		for c in cs:
++			order.append(Vector2i(c, r))
++	var wall := Node3D.new(); wall.position = Vector3(0, 1.4, -1.15); add_child(wall)
++	var bg := MeshInstance3D.new()
++	var pm := PlaneMesh.new(); pm.size = Vector2(3.7, 2.5)
++	bg.mesh = pm; bg.rotation_degrees = Vector3(0, 0, 0)
++	bg.material_override = _mat(Color(0.93, 0.945, 0.96), 0.0, 0.95)
++	wall.add_child(bg)
++	var cw := 3.6 / COLS; var ch := 2.4 / ROWS
++	for cell in order:
++		var q := MeshInstance3D.new()
++		var qm := QuadMesh.new(); qm.size = Vector2(cw * 0.98, ch * 0.98)
++		q.mesh = qm
++		q.position = Vector3(-1.8 + cw * (cell.x + 0.5), -1.2 + ch * (cell.y + 0.5), 0.01)
++		q.material_override = _mat(PAINT, 0.0, 0.7)
++		q.visible = false
++		wall.add_child(q)
++		wall_cells.append(q)
++
++func _advance_coverage(dt: float) -> void:
++	var total := COLS * ROWS
++	painted = min(total, painted + dt * 6.0)
++	var idx := int(painted)
++	for i in min(idx, wall_cells.size()):
++		wall_cells[i].visible = true
++	# aim the head at the active cell
++	if idx < order.size() and head:
++		var cell := order[idx]
++		var tx := -1.8 + (3.6 / COLS) * (cell.x + 0.5)
++		var ty := 1.4 + (-1.2 + (2.4 / ROWS) * (cell.y + 0.5))
++		head.rotation.y = atan2(tx, 1.0) * 0.6
++		head.rotation.x = -atan2(ty - 1.9, 1.0) * 0.5
++	if painted >= total:
++		painted = 0.0
++		for c in wall_cells: c.visible = false
++
++# ---- cameras -----------------------------------------------------------------
++func _build_cameras() -> void:
++	var presets := [
++		{ "pos": Vector3(3.4, 2.3, 3.8), "look": Vector3(0, 1.1, 0) },   # overview
++		{ "pos": Vector3(0.9, 2.0, 1.4), "look": Vector3(0, 1.9, 0.2) }, # head close-up
++		{ "pos": Vector3(1.6, 0.7, 1.6), "look": Vector3(0, 0.3, 0) },   # base internals
++		{ "pos": Vector3(2.6, 3.0, -2.6), "look": Vector3(0, 1.2, -1.0) },# wall / coverage
++	]
++	for p in presets:
++		var c := Camera3D.new()
++		c.position = p.pos
++		c.look_at_from_position(p.pos, p.look, Vector3.UP)
++		c.fov = 42
++		c.current = false
++		add_child(c)
++		cameras.append(c)
++	cameras[0].current = true
++
++func _next_camera() -> void:
++	cameras[cam_index].current = false
++	cam_index = (cam_index + 1) % cameras.size()
++	cameras[cam_index].current = true
++
++# ---- HUD ---------------------------------------------------------------------
++func _build_hud() -> void:
++	var cl := CanvasLayer.new(); add_child(cl)
++	hud = Label.new()
++	hud.position = Vector2(16, 12)
++	hud.add_theme_color_override("font_color", Color.WHITE)
++	cl.add_child(hud)
++
++func _update_hud() -> void:
++	if not hud: return
++	var mode := "cutaway" if cutaway else ("exploded" if exploded else "assembled")
++	hud.text = "PaintForge Pro Simulator — CONCEPT (all values are targets)\n"
++	hud.text += "view: %s   %s   %s\n" % [mode, "running" if running else "paused", "slow-mo" if slowmo else "1x"]
++	hud.text += "coverage: %d%%\n" % int(painted / (COLS * ROWS) * 100.0)
++	if job.size() > 0:
++		hud.text += "job: %s\n" % str(job)
++	hud.text += "[P]run  [C]cutaway  [X]explode  [Z]slow-mo  [Space]camera"
++
++# ---- toggles -----------------------------------------------------------------
++func _set_cutaway(v: bool) -> void:
++	cutaway = v
++	for b in cut_boxes:
++		b.visible = v
++
++# ---- job params (web query string OR desktop CLI) ----------------------------
++func _read_job() -> Dictionary:
++	var out := {}
++	# Web export: read window.location.search via the JS bridge.
++	if OS.has_feature("web") and JavaScriptBridge:
++		var search: String = str(JavaScriptBridge.eval("window.location.search", true))
++		if search.begins_with("?"):
++			for pair in search.substr(1).split("&"):
++				var kv := pair.split("=")
++				if kv.size() == 2:
++					out[kv[0]] = kv[1].uri_decode()
++	# Desktop: --job "sqft=8400&coats=3&surface=wall"
++	for a in OS.get_cmdline_args():
++		if a.begins_with("--job="):
++			for pair in a.substr(6).split("&"):
++				var kv := pair.split("=")
++				if kv.size() == 2:
++					out[kv[0]] = kv[1]
++	return out
++
++func _apply_job() -> void:
++	# Hook: scale wall to sqft, set coats/passes, preselect robot, etc.
++	# Kept honest — only affects the concept sim, never claims a real run.
++	if job.has("surface") and job["surface"] == "ceiling":
++		pass # e.g. re-target the head pitch for overhead work
++
++# ---- tiny mesh/material helpers ---------------------------------------------
++func _mat(col: Color, metal: float, rough: float) -> StandardMaterial3D:
++	var m := StandardMaterial3D.new()
++	m.albedo_color = col
++	m.metallic = metal
++	m.roughness = rough
++	return m
++
++func _part(parent: Node3D, mesh_res, pos: Vector3, col: Color, rot := Vector3.ZERO) -> MeshInstance3D:
++	var mi := MeshInstance3D.new()
++	mi.mesh = mesh_res
++	mi.position = pos
++	mi.rotation_degrees = rot
++	mi.material_override = _mat(col, 0.9, 0.35)
++	parent.add_child(mi)
++	return mi
++
++func _explode(node: Node3D, solid: Vector3, blown: Vector3) -> void:
++	explode_targets.append({ "node": node, "solid": solid, "blown": blown })
++
++func _box(x: float, y: float, z: float) -> BoxMesh:
++	var m := BoxMesh.new(); m.size = Vector3(x, y, z); return m
++func _cyl(r: float, h: float) -> CylinderMesh:
++	var m := CylinderMesh.new(); m.top_radius = r; m.bottom_radius = r; m.height = h; return m
++func _cone(r: float, h: float) -> CylinderMesh:
++	var m := CylinderMesh.new(); m.top_radius = 0.0; m.bottom_radius = r; m.height = h; return m
++func _torus(inner: float, tube: float) -> TorusMesh:
++	var m := TorusMesh.new(); m.inner_radius = inner; m.outer_radius = inner + tube; return m
+diff --git a/godot/README.md b/godot/README.md
+new file mode 100644
+index 0000000..f07efbf
+--- /dev/null
++++ b/godot/README.md
+@@ -0,0 +1,102 @@
++# PaintForge Pro Simulator (Godot 4)
++
++The flagship high-fidelity twin. The Next.js site is the shop window; this is the
++room you walk into. `Main.gd` builds a runnable articulated robot from primitives
++so the project works today — you then swap primitives for modelled subassemblies
++without rewriting the animation, cutaway, explode, or job wiring.
++
++> Everything here is a **concept**. Keep the on-screen "all values are targets"
++> banner until real hardware exists.
++
++## 1. Scene structure
++
++```
++Main.tscn                (Node3D + Main.gd)   ← entry scene, builds everything
++└─ (runtime) 
++   ├─ WorldEnvironment / DirectionalLight ×2 / floor
++   ├─ Base            (Node3D)      mobile chassis
++   │   ├─ Shell       (CSGCombiner3D)  ← carved open in cutaway
++   │   ├─ Motor.L / Motor.R (Node3D → Rotor spins)
++   │   ├─ Battery / Controller / Wheels ×4
++   ├─ Column          (Node3D)      lift mast
++   │   ├─ Shell (CSGCombiner3D) · LeadScrew (spins) · Carriage · LiftServo
++   ├─ Head            (Node3D)      spray head (tracks the active wall cell)
++   │   ├─ Gearbox (2 meshing gears) · Pump (reciprocating piston) · Nozzle · Hose
++   ├─ Wall            (Node3D)      COLS×ROWS quads revealed boustrophedon-order
++   ├─ Camera3D ×4     overview / head / base internals / coverage
++   └─ CanvasLayer/HUD
++```
++
++When you move to modelled assets, keep these **node names** — the script finds
++parts by structure, and named `AnimationPlayer` tracks target the same nodes.
++
++## 2. Recommended target structure (after Blender)
++
++Split the machine into one `.glb` **per subassembly**, each with internals as
++separate meshes so they can be shown/hidden/exploded independently:
++
++```
++assets/
++  base.glb            → Chassis, Motor_L{Stator,Rotor,Shaft,Windings}, Battery, PCB, Harness
++  column.glb          → Mast, LeadScrew, ScrewThreads, Carriage, LiftServo{Stator,Rotor}
++  head.glb            → GearboxHousing, GearA(18t), GearB(12t), Pump{Cylinder,Piston,Valves}, Nozzle
++  materials/          → shared StandardMaterial3D (steel, copper, PCB, paint)
++scenes/
++  Robot.tscn          → instances the three .glb, re-parents named nodes
++  ProSim.tscn         → Robot + Wall + Cameras + HUD + PathPlanner
++```
++
++## 3. Modelling & animating internals (Blender → Godot)
++
++**Model each moving part as its own object** — never merge a rotor into its
++stator. Naming is the contract with GDScript/animation.
++
++1. **Rotors / shafts** — model the laminations + windings as separate meshes,
++   parent them to an empty `Rotor` at the true rotation axis. Set the object
++   origin **on the axis** (Object → Set Origin → Origin to 3D Cursor on the
++   centreline) so `rotate_z` looks physically correct. Don't bake spin in
++   Blender — spin it in Godot (`Main.gd` already does, at realistic rad/s).
++2. **Gears** — model real involute teeth (Blender *Add Mesh: Extra Objects → Gears*
++   or the *Mechanical* add-on). Two gears, origins on their axes, tooth counts
++   matching the ratio (18:12 here). Godot turns them opposite at the ratio, so
++   teeth appear to mesh.
++3. **Lead screw** — model the thread as a swept helix; spin about Y. The carriage
++   is a separate node you drive up/down in an `AnimationPlayer` synced to spin.
++4. **Switches / buttons / connectors** — tiny separate meshes; toggle with a
++   1–2 frame `AnimationPlayer` track or a shader emission flip in GDScript.
++5. **Paint pump** — piston as its own object; reciprocate in code (already wired)
++   or an `AnimationPlayer` sine track. Add a check-ball object for realism.
++6. **Wiring** — a Curve/Bevel in Blender exported as mesh, or Godot `Path3D` +
++   `CSGPolygon3D` in path mode for editable harnesses.
++
++**Export:** glTF 2.0 `.glb`, +Y up, apply transforms, one file per subassembly.
++In Godot's import dock set meshes to *Separate* so each internal stays its own
++`MeshInstance3D`. Assign shared materials as `StandardMaterial3D` resources.
++
++**Cutaway two ways** — the scaffold uses **CSG subtraction** (a hidden
++`OPERATION_SUBTRACTION` box toggled on) which literally carves the housing in 3D
++and needs no shader. For high mesh counts, switch to a **clip-plane shader**
++(`clip_space`/`discard` on world position) applied only to shell materials, so
++internals never clip — same idea as the web build's `THREE.Plane`.
++
++## 4. Exports
++
++**Web (HTML5):** Project → Export → Web. Set *Head Include* to allow the query
++string, tick *Focus Canvas on Start*. Output to `paintforge-ai/public/pro-sim/`
++so Next serves it at `/pro-sim/`; point `NEXT_PUBLIC_PRO_SIM_URL=/pro-sim/`.
++Requires cross-origin isolation for threads — either export **single-threaded**,
++or add COOP/COEP headers in `next.config.ts` / `vercel.json` for the `/pro-sim`
++route. Single-threaded is the simplest first ship.
++
++**Desktop:** export Windows (`.exe`), macOS (`.app`/`.dmg` — sign + notarize),
++Linux (`.AppImage`). Host under `NEXT_PUBLIC_PRO_SIM_DESKTOP`. Accept the same
++params as `--job="sqft=8400&coats=3&surface=wall"` (already parsed in
++`_read_job()`), or register a `paintforge://` URL scheme for deep links.
++
++## 5. Job hand-off from the site
++
++The web build reads `window.location.search`; the desktop build reads
++`--job=...`. `ProSimulatorLauncher.tsx` builds that query from whatever the
++visitor configured (ROI calculator sqft/coats, selected robot). Extend
++`_apply_job()` to scale the wall, set pass count, or preselect a robot — but keep
++it a **concept** sim; never present a simulated run as a real field result.
+diff --git a/godot/project.godot b/godot/project.godot
+new file mode 100644
+index 0000000..ea66d07
+--- /dev/null
++++ b/godot/project.godot
+@@ -0,0 +1,29 @@
++; Godot 4.3+ project — PaintForge Pro Simulator (scaffold)
++; Open this folder in Godot 4. Main.tscn is the entry scene; its root is a
++; Node3D with Main.gd attached, which builds the whole articulated robot at
++; runtime so you can run it before any Blender assets exist.
++
++config_version=5
++
++[application]
++config/name="PaintForge Pro Simulator"
++config/description="High-fidelity inspectable digital twin — concept build. All values are targets."
++run/main_scene="res://Main.tscn"
++config/features=PackedStringArray("4.3", "Forward Plus")
++boot_splash/show_image=false
++
++[display]
++window/size/viewport_width=1280
++window/size/viewport_height=720
++window/stretch/mode="canvas_items"
++
++[rendering]
++anti_aliasing/quality/msaa_3d=2
++environment/defaults/default_clear_color=Color(0.039, 0.145, 0.251, 1)
++
++[input]
++cam_next={ "deadzone":0.5,"events":[{"type":"key","keycode":32}] }
++toggle_cutaway={ "deadzone":0.5,"events":[{"type":"key","keycode":67}] }
++toggle_explode={ "deadzone":0.5,"events":[{"type":"key","keycode":88}] }
++toggle_slowmo={ "deadzone":0.5,"events":[{"type":"key","keycode":90}] }
++toggle_run={ "deadzone":0.5,"events":[{"type":"key","keycode":80}] }
+-- 
+2.43.0
+
