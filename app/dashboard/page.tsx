@@ -1,4 +1,6 @@
-import { Bot, Gauge, ClipboardList, Thermometer } from "lucide-react";
+import { Bot, Gauge, ClipboardList, Thermometer, ScanEye } from "lucide-react";
+import RobotShowcaseMount from "@/components/RobotShowcaseMount";
+import { ProSimulatorLauncher } from "@/components/ProSimulatorLauncher";
 
 export const metadata = {
   title: "Product Preview | PaintForge",
@@ -31,6 +33,22 @@ export default function DashboardPreview() {
           number on this page is illustrative sample data — no robots are
           deployed yet. Pilot partners will shape what ships.
         </p>
+      </div>
+
+      {/* Inspectable digital twin */}
+      <div className="mb-10">
+        <div className="flex items-center gap-2 mb-4">
+          <ScanEye className="w-5 h-5 text-[#FF6B35]" />
+          <h2 className="font-semibold text-xl tracking-tight">Digital Twin (concept)</h2>
+        </div>
+        <RobotShowcaseMount />
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
+          <p className="text-sm text-[#64748B] max-w-xl">
+            A live, inspectable preview of the concept unit. Open it up to see how the
+            painting mechanism works, then launch the full-fidelity Pro Simulator.
+          </p>
+          <ProSimulatorLauncher variant="inline" job={{ source: "dashboard" }} />
+        </div>
       </div>
 
       {/* Fleet status */}

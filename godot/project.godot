@@ -1,0 +1,29 @@
+; Godot 4.3+ project — PaintForge Pro Simulator (scaffold)
+; Open this folder in Godot 4. Main.tscn is the entry scene; its root is a
+; Node3D with Main.gd attached, which builds the whole articulated robot at
+; runtime so you can run it before any Blender assets exist.
+
+config_version=5
+
+[application]
+config/name="PaintForge Pro Simulator"
+config/description="High-fidelity inspectable digital twin — concept build. All values are targets."
+run/main_scene="res://Main.tscn"
+config/features=PackedStringArray("4.3", "Forward Plus")
+boot_splash/show_image=false
+
+[display]
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+
+[rendering]
+anti_aliasing/quality/msaa_3d=2
+environment/defaults/default_clear_color=Color(0.039, 0.145, 0.251, 1)
+
+[input]
+cam_next={ "deadzone":0.5,"events":[{"type":"key","keycode":32}] }
+toggle_cutaway={ "deadzone":0.5,"events":[{"type":"key","keycode":67}] }
+toggle_explode={ "deadzone":0.5,"events":[{"type":"key","keycode":88}] }
+toggle_slowmo={ "deadzone":0.5,"events":[{"type":"key","keycode":90}] }
+toggle_run={ "deadzone":0.5,"events":[{"type":"key","keycode":80}] }

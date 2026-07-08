@@ -4,6 +4,8 @@ import { Wallet, Wrench, ShieldCheck, Check, ArrowRight, Info, AlertTriangle } f
 import { ROBOTS, ROBOTS_DISCLAIMER, NICHE_PROBLEMS } from "@/lib/robots";
 import { RobotCard } from "@/components/RobotCard";
 import { RobotCellShowcase } from "@/components/RobotCellShowcase";
+import RobotShowcaseMount from "@/components/RobotShowcaseMount";
+import { ProSimulatorLauncher } from "@/components/ProSimulatorLauncher";
 import { EcosystemCTA } from "@/components/EcosystemCTA";
 import { EcosystemRibbon } from "@/components/EcosystemRibbon";
 import { PlatformComparison } from "@/components/PlatformComparison";
@@ -114,10 +116,36 @@ export default function RaaSPage() {
       <section className="max-w-6xl mx-auto px-6 py-16">
         <div className="section-header mb-8">
           <div className="kicker mb-3">SEE IT RUN</div>
-          <h2 className="section-heading">A cell you can actually move.</h2>
-          <p className="mt-3 text-[#475569] max-w-2xl">Drag to orbit. Replay the coat. The software plans the passes and holds film build to target.</p>
+          <h2 className="section-heading">A machine you can see through.</h2>
+          <p className="mt-3 text-[#475569] max-w-2xl">
+            Slice it open, explode it, watch the internals move. This is the PaintForge
+            concept unit as an inspectable digital twin — every part is a design target.
+          </p>
         </div>
-        <RobotCellShowcase />
+
+        <RobotShowcaseMount />
+
+        <div className="mt-8 rounded-2xl border border-[#E2E8F0] bg-gradient-to-br from-[#0A2540] to-[#0D2B4A] p-8 flex flex-col md:flex-row md:items-center gap-6">
+          <div className="flex-1">
+            <div className="text-[11px] font-mono tracking-widest uppercase text-[#FF9A6B] mb-2">PRO SIMULATOR</div>
+            <h3 className="text-white font-semibold text-2xl tracking-tight mb-1">Inspect it at full mechanical fidelity.</h3>
+            <p className="text-white/70 text-[15px] max-w-xl">
+              The browser twin above is the preview. The Godot-powered Pro Simulator adds
+              cross-section teardown, exploded assemblies, slow-motion internals, and a
+              realistic coverage run you can drive.
+            </p>
+          </div>
+          <ProSimulatorLauncher job={{ source: "raas", surface: "both", coats: 3 }} />
+        </div>
+
+        <details className="mt-6">
+          <summary className="cursor-pointer text-sm text-[#64748B] hover:text-[#0A2540]">
+            Compare the reference industrial arms
+          </summary>
+          <div className="mt-4">
+            <RobotCellShowcase />
+          </div>
+        </details>
       </section>
 
       {/* ROBOT LANDSCAPE — problem/solution */}
