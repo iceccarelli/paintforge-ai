@@ -1,0 +1,555 @@
+"use client";
+
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import Image from "next/image";
+import {
+  X,
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  Maximize2,
+  Ruler,
+  SprayCan,
+  LayoutGrid,
+  type LucideIcon,
+} from "lucide-react";
+
+// ---------------------------------------------------------------------------
+// AUTONOMOUS PAINTING SYSTEMS — AWS-style product showcase.
+//
+// A horizontal, swipeable rail of high-resolution cards. Each card shows a
+// PaintForge unit operating independently on walls and ceilings. Clicking a
+// card opens a full-screen lightbox with the large image, the design-spec
+// envelope (reach / spray width / coverage), a technical explanation, and a
+// "Similar Views" row.
+//
+// Design language is inherited from the existing site: navy (#0A2540) + accent
+// (#FF6B35), .kicker / .section-header / .section-heading utilities, the
+// .card lift, and the shared modal keyframes (animate-backdrop-in /
+// animate-dialog-in) already defined in globals.css.
+//
+// Images live in /public/systems/system-01.png … system-10.png (784×1168).
+// Served as plain <img> with fixed-ratio wrappers so there is zero layout
+// shift and no dependency on next/image optimizer configuration.
+// ---------------------------------------------------------------------------
+
+type SystemSpec = {
+  reach: string;
+  sprayWidth: string;
+  coverage: string;
+};
+
+type SystemView = {
+  id: string;
+  src: string;
+  surface: "Walls" | "Ceilings" | "Walls & Ceilings" | "Stairwells" | "Detail";
+  title: string;
+  blurb: string;
+  detail: string;
+  spec: SystemSpec;
+};
+
+// Design-spec envelope — engineering targets for pilot units, consistent with
+// the "in development / targets, not measured results" framing used site-wide.
+const SPEC_TALL: SystemSpec = {
+  reach: "Up to 4.6 m vertical",
+  sprayWidth: "300–450 mm fan",
+  coverage: "1,000+ sqft / coat / day",
+};
+const SPEC_CEILING: SystemSpec = {
+  reach: "Overhead, 2.4–4.6 m",
+  sprayWidth: "300–450 mm fan",
+  coverage: "1,000+ sqft / coat / day",
+};
+const SPEC_DETAIL: SystemSpec = {
+  reach: "0.9 m working arm",
+  sprayWidth: "120–250 mm fan",
+  coverage: "Servo-gun edge & reveal work",
+};
+
+const SYSTEMS: SystemView[] = [
+  {
+    id: "sys-01",
+    src: "/systems/system-01.png",
+    surface: "Walls",
+    title: "Full-Height Wall Coat",
+    blurb:
+      "Unit lays a uniform base coat across an open interior wall, mast fully extended, no scaffold.",
+    detail:
+      "The mobile base holds a fixed standoff from the wall while the telescoping mast and arm sweep a continuous vertical pattern. Airless pressure and flow are held to the spray-path plan so a single pass builds an even film without banding or holidays.",
+    spec: SPEC_TALL,
+  },
+  {
+    id: "sys-02",
+    src: "/systems/system-02.png",
+    surface: "Walls & Ceilings",
+    title: "Wall-to-Ceiling Transition",
+    blurb:
+      "Arm articulates from wall into the ceiling plane, keeping a constant spray distance around the corner.",
+    detail:
+      "At the wall/ceiling break the arm re-orients the spray head to hold nozzle-to-surface distance and angle constant. Coverage overlap is planned across the transition so the corner is not over- or under-applied where two planes meet.",
+    spec: SPEC_TALL,
+  },
+  {
+    id: "sys-03",
+    src: "/systems/system-03.png",
+    surface: "Ceilings",
+    title: "Overhead Ceiling Pass",
+    blurb:
+      "Unit sprays directly overhead with the arm raised into the ceiling, base stationary beneath.",
+    detail:
+      "Ceiling work runs from a stable, self-leveled base with the arm elevated overhead. The path planner sequences parallel passes with controlled overlap and manages atomization so overspray and fallback onto the base are minimized.",
+    spec: SPEC_CEILING,
+  },
+  {
+    id: "sys-04",
+    src: "/systems/system-04.png",
+    surface: "Walls",
+    title: "Long-Run Corridor Wall",
+    blurb:
+      "Unit indexes down a corridor, coating a long wall run in registered, repeatable segments.",
+    detail:
+      "For long runs the base advances in indexed steps between spray segments. Each new segment is registered against the last so seams line up and film thickness stays continuous down the length of the corridor.",
+    spec: SPEC_TALL,
+  },
+  {
+    id: "sys-05",
+    src: "/systems/system-05.png",
+    surface: "Walls",
+    title: "Coat Around Openings",
+    blurb:
+      "Unit works a wall broken up by a window opening, adjusting the path around the reveal.",
+    detail:
+      "The scan step flags openings as no-spray zones. The planner routes coverage up to the reveal line and hands tight edges and returns to servo-gun detailing, keeping glass and frames clean without manual masking of the field.",
+    spec: SPEC_TALL,
+  },
+  {
+    id: "sys-06",
+    src: "/systems/system-06.png",
+    surface: "Ceilings",
+    title: "High-Bay Ceiling Reach",
+    blurb:
+      "Mast at full extension puts the spray head into a high ceiling from the floor, no lift required.",
+    detail:
+      "Full mast extension reaches high-bay ceilings that would otherwise need a scissor lift or scaffold. Reach is bounded by the design envelope; beyond it the job is split into planned base positions rather than pushing the arm out of tolerance.",
+    spec: SPEC_CEILING,
+  },
+  {
+    id: "sys-07",
+    src: "/systems/system-07.png",
+    surface: "Stairwells",
+    title: "Stairwell Elevation",
+    blurb:
+      "Unit coats a tall stairwell wall, the arm reaching across the void from a level landing.",
+    detail:
+      "Stairwells are one of the slowest, most hazardous surfaces for a human crew. The unit sets up on a level landing and reaches across the elevation, holding standoff over the drop so the tall wall is coated without staging a scaffold in the shaft.",
+    spec: SPEC_TALL,
+  },
+  {
+    id: "sys-08",
+    src: "/systems/system-08.png",
+    surface: "Walls & Ceilings",
+    title: "Room-Scale Autonomy",
+    blurb:
+      "Unit works an empty room end to end, sequencing walls and ceiling from one digital twin.",
+    detail:
+      "From a single site scan the unit sequences an entire room — walls then ceiling — as one coverage plan. It repositions its base between zones autonomously so a crew supervises prep and QA instead of moving equipment.",
+    spec: SPEC_TALL,
+  },
+  {
+    id: "sys-09",
+    src: "/systems/system-09.png",
+    surface: "Walls",
+    title: "Consistent Film Build",
+    blurb:
+      "Close pass showing an even wet edge, the head holding constant speed and standoff.",
+    detail:
+      "Film consistency comes from holding three things constant: nozzle standoff, traverse speed, and flow. The closed-loop control target is ±2 mil across the field, which is the core quality thesis — a coat applied to spec instead of eyeballed.",
+    spec: SPEC_TALL,
+  },
+  {
+    id: "sys-10",
+    src: "/systems/system-10.png",
+    surface: "Detail",
+    title: "Edge & Reveal Detailing",
+    blurb:
+      "Servo-gun narrows the fan for cut-lines, corners, and architectural reveals.",
+    detail:
+      "For edges the spray fan narrows and the servo gun trades throughput for precision. The unit cuts to reveal lines and works corners that the wide field pass deliberately stops short of, so the finished boundary is crisp.",
+    spec: SPEC_DETAIL,
+  },
+];
+
+// A small colored badge for the operating surface.
+function SurfaceBadge({ surface }: { surface: SystemView["surface"] }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#0A2540]/85 px-3 py-1 text-[11px] font-semibold uppercase tracking-[1.5px] text-white backdrop-blur">
+      <span className="h-1.5 w-1.5 rounded-full bg-[#FF6B35]" />
+      {surface}
+    </span>
+  );
+}
+
+// One spec cell used in the lightbox.
+function SpecCell({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
+      <div className="mb-2 flex items-center gap-2 text-[#64748B]">
+        <Icon className="h-4 w-4 text-[#FF6B35]" />
+        <span className="text-[11px] font-semibold uppercase tracking-[1.5px]">
+          {label}
+        </span>
+      </div>
+      <div className="font-mono text-lg font-semibold tracking-tight text-[#0A2540]">
+        {value}
+      </div>
+    </div>
+  );
+}
+
+export function AutonomousSystems() {
+  const railRef = useRef<HTMLDivElement>(null);
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [canLeft, setCanLeft] = useState(false);
+  const [canRight, setCanRight] = useState(true);
+
+  const active = openIndex !== null ? SYSTEMS[openIndex] : null;
+
+  // Update arrow affordances as the rail scrolls.
+  const updateArrows = useCallback(() => {
+    const el = railRef.current;
+    if (!el) return;
+    setCanLeft(el.scrollLeft > 8);
+    setCanRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 8);
+  }, []);
+
+  useEffect(() => {
+    updateArrows();
+    const el = railRef.current;
+    if (!el) return;
+    el.addEventListener("scroll", updateArrows, { passive: true });
+    window.addEventListener("resize", updateArrows);
+    return () => {
+      el.removeEventListener("scroll", updateArrows);
+      window.removeEventListener("resize", updateArrows);
+    };
+  }, [updateArrows]);
+
+  const scrollByCards = useCallback((dir: 1 | -1) => {
+    const el = railRef.current;
+    if (!el) return;
+    const card = el.querySelector<HTMLElement>("[data-card]");
+    const step = card ? card.offsetWidth + 20 : el.clientWidth * 0.8;
+    el.scrollBy({ left: dir * step, behavior: "smooth" });
+  }, []);
+
+  // Lightbox: scroll lock + keyboard nav (Esc / ← / →).
+  useEffect(() => {
+    if (openIndex === null) return;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpenIndex(null);
+      if (e.key === "ArrowRight")
+        setOpenIndex((i) => (i === null ? i : (i + 1) % SYSTEMS.length));
+      if (e.key === "ArrowLeft")
+        setOpenIndex((i) =>
+          i === null ? i : (i - 1 + SYSTEMS.length) % SYSTEMS.length
+        );
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [openIndex]);
+
+  const similar =
+    openIndex === null
+      ? []
+      : SYSTEMS.map((s, i) => ({ s, i }))
+          .filter(({ i }) => i !== openIndex)
+          .filter(
+            ({ s }) => active !== null && s.surface === active.surface
+          )
+          .concat(
+            // Backfill so there are always a few "Similar Views".
+            SYSTEMS.map((s, i) => ({ s, i })).filter(
+              ({ i, s }) =>
+                i !== openIndex && active !== null && s.surface !== active.surface
+            )
+          )
+          .slice(0, 5);
+
+  return (
+    <section
+      id="autonomous-systems"
+      className="bg-[#F8FAFC] py-20 border-y border-[#E2E8F0]"
+    >
+      <div className="max-w-7xl mx-auto px-6">
+        {/* Header — matches the site's left-aligned accent-rule pattern */}
+        <div className="section-header mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <div className="kicker mb-3">AUTONOMOUS PAINTING SYSTEMS</div>
+            <h2 className="section-heading">
+              One platform, working
+              <br />
+              independently on every surface.
+            </h2>
+          </div>
+          <div className="hidden shrink-0 gap-2 sm:flex">
+            <button
+              type="button"
+              onClick={() => scrollByCards(-1)}
+              disabled={!canLeft}
+              aria-label="Scroll left"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-[#E2E8F0] bg-white text-[#0A2540] shadow-sm transition enabled:hover:border-[#CBD5E1] enabled:hover:-translate-y-0.5 disabled:opacity-30"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollByCards(1)}
+              disabled={!canRight}
+              aria-label="Scroll right"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-[#E2E8F0] bg-white text-[#0A2540] shadow-sm transition enabled:hover:border-[#CBD5E1] enabled:hover:-translate-y-0.5 disabled:opacity-30"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+
+        <p className="mb-8 max-w-3xl text-[15px] leading-relaxed text-[#475569]">
+          A closer look at how a single PaintForge unit runs a job on its own —
+          full-height walls, overhead ceilings, stairwells, and the tight edges
+          in between. Swipe the rail, then open any view for the design-spec
+          envelope and how that pass is executed.
+        </p>
+      </div>
+
+      {/* Horizontal rail — full-bleed on mobile, scroll-snap, no layout shift */}
+      <div className="relative">
+        <div
+          ref={railRef}
+          className="flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth px-6 pb-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden lg:px-[max(1.5rem,calc((100vw-80rem)/2+1.5rem))]"
+        >
+          {SYSTEMS.map((sys, i) => (
+            <button
+              key={sys.id}
+              data-card
+              type="button"
+              onClick={() => setOpenIndex(i)}
+              className="card group relative w-[80vw] shrink-0 snap-start overflow-hidden p-0 text-left sm:w-[380px]"
+              aria-label={`Open ${sys.title}`}
+            >
+              {/* Fixed 4:3 media box → zero layout shift while images decode */}
+              <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#0A2540]">
+                <Image
+                  src={sys.src}
+                  alt={`PaintForge unit — ${sys.title}`}
+                  fill
+                  sizes="(max-width: 640px) 80vw, 380px"
+                  className="object-cover object-top transition-transform duration-500 ease-out group-hover:scale-[1.06]"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0A2540]/70 via-transparent to-transparent" />
+                <div className="absolute left-3 top-3">
+                  <SurfaceBadge surface={sys.surface} />
+                </div>
+                <div className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#0A2540] opacity-0 shadow-sm backdrop-blur transition-opacity duration-300 group-hover:opacity-100">
+                  <Maximize2 className="h-4 w-4" />
+                </div>
+              </div>
+
+              <div className="flex flex-col p-5">
+                <h3 className="text-lg font-semibold tracking-tight text-[#0A2540]">
+                  {sys.title}
+                </h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-[#475569]">
+                  {sys.blurb}
+                </p>
+                <span className="learn-more mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[#FF6B35]">
+                  View details
+                  <ArrowRight className="h-4 w-4 transition-transform" />
+                </span>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Mobile arrows under the rail */}
+      <div className="mt-2 flex justify-center gap-2 sm:hidden">
+        <button
+          type="button"
+          onClick={() => scrollByCards(-1)}
+          disabled={!canLeft}
+          aria-label="Scroll left"
+          className="flex h-11 w-11 items-center justify-center rounded-full border border-[#E2E8F0] bg-white text-[#0A2540] shadow-sm disabled:opacity-30"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+        <button
+          type="button"
+          onClick={() => scrollByCards(1)}
+          disabled={!canRight}
+          aria-label="Scroll right"
+          className="flex h-11 w-11 items-center justify-center rounded-full border border-[#E2E8F0] bg-white text-[#0A2540] shadow-sm disabled:opacity-30"
+        >
+          <ChevronRight className="h-5 w-5" />
+        </button>
+      </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* LIGHTBOX                                                            */}
+      {/* ------------------------------------------------------------------ */}
+      {active !== null && openIndex !== null && (
+        <div
+          className="fixed inset-0 z-[95] flex items-center justify-center p-3 sm:p-6"
+          role="dialog"
+          aria-modal="true"
+          aria-label={active.title}
+        >
+          <div
+            className="absolute inset-0 bg-[#0A2540]/80 backdrop-blur-sm animate-backdrop-in"
+            onClick={() => setOpenIndex(null)}
+          />
+
+          <div className="relative flex max-h-[calc(100dvh-1.5rem)] w-full max-w-6xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl animate-dialog-in sm:max-h-[calc(100dvh-3rem)]">
+            {/* Close */}
+            <button
+              onClick={() => setOpenIndex(null)}
+              aria-label="Close"
+              className="absolute right-4 top-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-[#0A2540] shadow-md backdrop-blur transition hover:bg-white"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            {/* Prev / Next */}
+            <button
+              onClick={() =>
+                setOpenIndex((i) =>
+                  i === null ? i : (i - 1 + SYSTEMS.length) % SYSTEMS.length
+                )
+              }
+              aria-label="Previous view"
+              className="absolute left-3 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-[#0A2540] shadow-md backdrop-blur transition hover:bg-white sm:flex"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() =>
+                setOpenIndex((i) =>
+                  i === null ? i : (i + 1) % SYSTEMS.length
+                )
+              }
+              aria-label="Next view"
+              className="absolute right-3 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-[#0A2540] shadow-md backdrop-blur transition hover:bg-white sm:flex"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+
+            <div className="grid flex-1 grid-cols-1 overflow-y-auto lg:grid-cols-[1.15fr_1fr]">
+              {/* Large image */}
+              <div className="relative flex items-center justify-center bg-[#0A2540] p-4 lg:p-6">
+                <Image
+                  src={active.src}
+                  alt={`PaintForge unit — ${active.title}`}
+                  width={784}
+                  height={1168}
+                  priority
+                  sizes="(max-width: 1024px) 90vw, 640px"
+                  className="h-auto max-h-[42vh] w-auto rounded-xl object-contain shadow-lg lg:max-h-[76vh]"
+                />
+                <div className="absolute left-6 top-6">
+                  <SurfaceBadge surface={active.surface} />
+                </div>
+              </div>
+
+              {/* Detail panel */}
+              <div className="flex flex-col gap-6 p-6 sm:p-8">
+                <div>
+                  <div className="kicker mb-2">
+                    INDEPENDENT OPERATION · VIEW{" "}
+                    {String(openIndex + 1).padStart(2, "0")}/
+                    {String(SYSTEMS.length).padStart(2, "0")}
+                  </div>
+                  <h3 className="text-2xl font-semibold tracking-tight text-[#0A2540] sm:text-3xl">
+                    {active.title}
+                  </h3>
+                  <p className="mt-3 text-[15px] leading-relaxed text-[#475569]">
+                    {active.detail}
+                  </p>
+                </div>
+
+                {/* Precise measurements */}
+                <div>
+                  <div className="mb-3 text-[11px] font-semibold uppercase tracking-[1.5px] text-[#64748B]">
+                    Design-spec envelope
+                  </div>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <SpecCell
+                      icon={Ruler}
+                      label="Reach"
+                      value={active.spec.reach}
+                    />
+                    <SpecCell
+                      icon={SprayCan}
+                      label="Spray width"
+                      value={active.spec.sprayWidth}
+                    />
+                    <SpecCell
+                      icon={LayoutGrid}
+                      label="Coverage"
+                      value={active.spec.coverage}
+                    />
+                  </div>
+                  <p className="mt-3 text-xs leading-relaxed text-[#94A3B8]">
+                    Engineering targets for pilot units — design specifications,
+                    not measured field results. Pilot deployments will validate
+                    these numbers.
+                  </p>
+                </div>
+
+                {/* Similar Views */}
+                <div className="mt-auto">
+                  <div className="mb-3 text-[11px] font-semibold uppercase tracking-[1.5px] text-[#64748B]">
+                    Similar views
+                  </div>
+                  <div className="flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    {similar.map(({ s, i }) => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => setOpenIndex(i)}
+                        aria-label={`Open ${s.title}`}
+                        className="group relative h-20 w-28 shrink-0 overflow-hidden rounded-lg border border-[#E2E8F0] bg-[#0A2540] transition hover:border-[#FF6B35]"
+                      >
+                        <Image
+                          src={s.src}
+                          alt={s.title}
+                          fill
+                          sizes="112px"
+                          className="object-cover object-top transition-transform duration-300 group-hover:scale-105"
+                        />
+                        <span className="absolute inset-x-0 bottom-0 truncate bg-[#0A2540]/80 px-1.5 py-1 text-[10px] font-medium text-white">
+                          {s.title}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}

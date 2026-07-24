@@ -13,6 +13,7 @@ import {
 import { ROICalculator } from "@/components/ROICalculator";
 import { HeroReel } from "@/components/HeroReel";
 import { ApplyCTA } from "@/components/ApplyModal";
+import { AutonomousSystems } from "@/components/AutonomousSystems";
 import { FAQ } from "@/components/FAQ";
 
 export default function PaintForgeHomepage() {
@@ -93,6 +94,9 @@ export default function PaintForgeHomepage() {
           </div>
         </div>
       </div>
+
+      {/* AUTONOMOUS PAINTING SYSTEMS — AWS-style product showcase */}
+      <AutonomousSystems />
 
       {/* FEATURES */}
       <section id="features" className="max-w-7xl mx-auto px-6 pt-20 pb-16">
