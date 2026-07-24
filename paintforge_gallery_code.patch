@@ -1,0 +1,1743 @@
+diff --git a/.gitignore b/.gitignore
+index 1d9ea30..01ef334 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -42,3 +42,6 @@ next-env.d.ts
+ 
+ # delivery patch artifacts
+ *.patch
++
++# uploaded image source archives (extracted into public/gallery, not needed in-repo)
++paintforge-ai_*.zip
+diff --git a/app/gallery/page.tsx b/app/gallery/page.tsx
+new file mode 100644
+index 0000000..517616b
+--- /dev/null
++++ b/app/gallery/page.tsx
+@@ -0,0 +1,94 @@
++import Link from "next/link";
++import { ArrowRight } from "lucide-react";
++import { SystemsGallery } from "@/components/SystemsGallery";
++import { ApplyCTA } from "@/components/ApplyModal";
++import { SYSTEM_IMAGES, LINE_META } from "@/lib/systemsCatalog";
++
++export const metadata = {
++  title: "Systems Gallery | PaintForge — Autonomous Painting Robots",
++  description:
++    "The full PaintForge systems library: 80 renders across two product lines — FieldForge autonomous field units and StudioForge commissioning units — working walls, ceilings, corridors, stairwells, and detail.",
++  alternates: { canonical: "/gallery" },
++};
++
++export default function GalleryPage() {
++  const total = SYSTEM_IMAGES.length;
++  const fieldforge = SYSTEM_IMAGES.filter((s) => s.line === "FieldForge").length;
++  const studioforge = total - fieldforge;
++
++  return (
++    <div>
++      {/* Hero */}
++      <section className="bg-[#0A2540] py-16 text-white">
++        <div className="max-w-7xl mx-auto px-6">
++          <div className="section-header section-header--dark">
++            <div className="kicker mb-3">SYSTEMS GALLERY</div>
++            <h1 className="section-heading text-white">
++              Every system, every surface.
++            </h1>
++            <p className="mt-4 max-w-3xl text-lg text-white/70">
++              The complete PaintForge systems library — {total} renders across
++              two product lines. Filter by line or surface, and open any system
++              for its category, caption, and line context.
++            </p>
++          </div>
++
++          {/* Line summary */}
++          <div className="mt-10 grid gap-4 sm:grid-cols-2">
++            {(["FieldForge", "StudioForge"] as const).map((l) => (
++              <div
++                key={l}
++                className="rounded-2xl border border-white/10 bg-white/5 p-6"
++              >
++                <div className="flex items-baseline justify-between">
++                  <h2 className="text-xl font-semibold tracking-tight">
++                    {LINE_META[l].label}
++                  </h2>
++                  <span className="font-mono text-sm text-[#FF8C5A]">
++                    {l === "FieldForge" ? fieldforge : studioforge} views
++                  </span>
++                </div>
++                <div className="mt-1 text-[11px] font-semibold uppercase tracking-[1.5px] text-white/50">
++                  {LINE_META[l].tagline}
++                </div>
++                <p className="mt-3 text-sm leading-relaxed text-white/70">
++                  {LINE_META[l].blurb}
++                </p>
++              </div>
++            ))}
++          </div>
++        </div>
++      </section>
++
++      {/* Gallery grid */}
++      <section className="max-w-7xl mx-auto px-6 py-16">
++        <SystemsGallery />
++      </section>
++
++      {/* CTA */}
++      <section className="bg-[#F8FAFC] border-t border-[#E2E8F0] py-16">
++        <div className="max-w-4xl mx-auto px-6 text-center">
++          <div className="kicker mb-3">2026 PILOT PROGRAM</div>
++          <h2 className="section-heading mx-auto">
++            Want to see one of these on your site?
++          </h2>
++          <p className="mx-auto mt-4 max-w-2xl text-lg text-[#475569]">
++            We are recruiting a small GTA design-partner cohort for 2026 pilot
++            deployments. If painter shortages are costing you schedule or
++            margin, let&apos;s model your ROI together.
++          </p>
++          <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
++            <ApplyCTA />
++            <Link
++              href="/#autonomous-systems"
++              className="btn-secondary inline-flex items-center gap-2 px-8 py-4 text-lg"
++            >
++              Back to the showcase
++              <ArrowRight className="h-5 w-5" />
++            </Link>
++          </div>
++        </div>
++      </section>
++    </div>
++  );
++}
+diff --git a/app/sitemap.ts b/app/sitemap.ts
+index 5e9be96..76d3d46 100644
+--- a/app/sitemap.ts
++++ b/app/sitemap.ts
+@@ -8,6 +8,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
+   // excluded (see robots.ts) as a gated product preview.
+   const routes: Array<{ path: string; priority: number; changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"] }> = [
+     { path: "/", priority: 1.0, changeFrequency: "weekly" },
++    { path: "/gallery", priority: 0.8, changeFrequency: "monthly" },
+     { path: "/technology", priority: 0.9, changeFrequency: "monthly" },
+     { path: "/solutions", priority: 0.8, changeFrequency: "monthly" },
+     { path: "/raas", priority: 0.9, changeFrequency: "monthly" },
+diff --git a/components/AutonomousSystems.tsx b/components/AutonomousSystems.tsx
+index 3805576..8a067f4 100644
+--- a/components/AutonomousSystems.tsx
++++ b/components/AutonomousSystems.tsx
+@@ -1,7 +1,8 @@
+ "use client";
+ 
+-import React, { useCallback, useEffect, useRef, useState } from "react";
++import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+ import Image from "next/image";
++import Link from "next/link";
+ import {
+   X,
+   ArrowRight,
+@@ -13,184 +14,150 @@ import {
+   LayoutGrid,
+   type LucideIcon,
+ } from "lucide-react";
++import {
++  SYSTEM_IMAGES,
++  CATEGORY_META,
++  LINE_META,
++  type SystemCategory,
++} from "@/lib/systemsCatalog";
+ 
+ // ---------------------------------------------------------------------------
+-// AUTONOMOUS PAINTING SYSTEMS — AWS-style product showcase.
++// AUTONOMOUS PAINTING SYSTEMS — AWS-style product showcase (homepage).
+ //
+-// A horizontal, swipeable rail of high-resolution cards. Each card shows a
+-// PaintForge unit operating independently on walls and ceilings. Clicking a
+-// card opens a full-screen lightbox with the large image, the design-spec
+-// envelope (reach / spray width / coverage), a technical explanation, and a
+-// "Similar Views" row.
++// A horizontal, swipeable rail of high-resolution cards drawn from the shared
++// systems catalog. This homepage section is CURATED to the strongest FieldForge
++// (autonomous field-line) shots across a spread of surfaces; the full 80-image
++// library — both product lines, every category — lives on /gallery.
+ //
+-// Design language is inherited from the existing site: navy (#0A2540) + accent
+-// (#FF6B35), .kicker / .section-header / .section-heading utilities, the
+-// .card lift, and the shared modal keyframes (animate-backdrop-in /
+-// animate-dialog-in) already defined in globals.css.
++// Clicking a card opens a full-screen lightbox with the large image, the
++// design-spec envelope (reach / spray width / coverage), a technical
++// explanation, and a "Similar Views" row.
+ //
+-// Images live in /public/systems/system-01.png … system-10.png (784×1168).
+-// Served as plain <img> with fixed-ratio wrappers so there is zero layout
+-// shift and no dependency on next/image optimizer configuration.
++// Design language is inherited from the site: navy (#0A2540) + accent
++// (#FF6B35), .kicker / .section-header / .section-heading, the .card lift,
++// and the shared modal keyframes (animate-backdrop-in / animate-dialog-in).
+ // ---------------------------------------------------------------------------
+ 
+-type SystemSpec = {
+-  reach: string;
+-  sprayWidth: string;
+-  coverage: string;
+-};
+-
+-type SystemView = {
+-  id: string;
+-  src: string;
+-  surface: "Walls" | "Ceilings" | "Walls & Ceilings" | "Stairwells" | "Detail";
+-  title: string;
+-  blurb: string;
+-  detail: string;
+-  spec: SystemSpec;
+-};
++type SystemSpec = { reach: string; sprayWidth: string; coverage: string };
+ 
+-// Design-spec envelope — engineering targets for pilot units, consistent with
+-// the "in development / targets, not measured results" framing used site-wide.
+-const SPEC_TALL: SystemSpec = {
+-  reach: "Up to 4.6 m vertical",
+-  sprayWidth: "300–450 mm fan",
+-  coverage: "1,000+ sqft / coat / day",
+-};
+-const SPEC_CEILING: SystemSpec = {
+-  reach: "Overhead, 2.4–4.6 m",
+-  sprayWidth: "300–450 mm fan",
+-  coverage: "1,000+ sqft / coat / day",
+-};
+-const SPEC_DETAIL: SystemSpec = {
+-  reach: "0.9 m working arm",
+-  sprayWidth: "120–250 mm fan",
+-  coverage: "Servo-gun edge & reveal work",
+-};
+-
+-const SYSTEMS: SystemView[] = [
+-  {
+-    id: "sys-01",
+-    src: "/systems/system-01.png",
+-    surface: "Walls",
+-    title: "Full-Height Wall Coat",
+-    blurb:
+-      "Unit lays a uniform base coat across an open interior wall, mast fully extended, no scaffold.",
+-    detail:
+-      "The mobile base holds a fixed standoff from the wall while the telescoping mast and arm sweep a continuous vertical pattern. Airless pressure and flow are held to the spray-path plan so a single pass builds an even film without banding or holidays.",
+-    spec: SPEC_TALL,
+-  },
+-  {
+-    id: "sys-02",
+-    src: "/systems/system-02.png",
+-    surface: "Walls & Ceilings",
+-    title: "Wall-to-Ceiling Transition",
+-    blurb:
+-      "Arm articulates from wall into the ceiling plane, keeping a constant spray distance around the corner.",
+-    detail:
+-      "At the wall/ceiling break the arm re-orients the spray head to hold nozzle-to-surface distance and angle constant. Coverage overlap is planned across the transition so the corner is not over- or under-applied where two planes meet.",
+-    spec: SPEC_TALL,
++// Design-spec envelope keyed by category — engineering targets for pilot
++// units, consistent with the site's "targets, not measured results" framing.
++const SPEC_BY_CATEGORY: Record<SystemCategory, SystemSpec> = {
++  WALL: {
++    reach: "Up to 4.6 m vertical",
++    sprayWidth: "300–450 mm fan",
++    coverage: "1,000+ sqft / coat / day",
+   },
+-  {
+-    id: "sys-03",
+-    src: "/systems/system-03.png",
+-    surface: "Ceilings",
+-    title: "Overhead Ceiling Pass",
+-    blurb:
+-      "Unit sprays directly overhead with the arm raised into the ceiling, base stationary beneath.",
+-    detail:
+-      "Ceiling work runs from a stable, self-leveled base with the arm elevated overhead. The path planner sequences parallel passes with controlled overlap and manages atomization so overspray and fallback onto the base are minimized.",
+-    spec: SPEC_CEILING,
++  CEIL: {
++    reach: "Overhead, 2.4–4.6 m",
++    sprayWidth: "300–450 mm fan",
++    coverage: "1,000+ sqft / coat / day",
+   },
+-  {
+-    id: "sys-04",
+-    src: "/systems/system-04.png",
+-    surface: "Walls",
+-    title: "Long-Run Corridor Wall",
+-    blurb:
+-      "Unit indexes down a corridor, coating a long wall run in registered, repeatable segments.",
+-    detail:
+-      "For long runs the base advances in indexed steps between spray segments. Each new segment is registered against the last so seams line up and film thickness stays continuous down the length of the corridor.",
+-    spec: SPEC_TALL,
++  STAIR: {
++    reach: "Cross-void, level landing",
++    sprayWidth: "300–450 mm fan",
++    coverage: "Shaft walls, no scaffold",
+   },
+-  {
+-    id: "sys-05",
+-    src: "/systems/system-05.png",
+-    surface: "Walls",
+-    title: "Coat Around Openings",
+-    blurb:
+-      "Unit works a wall broken up by a window opening, adjusting the path around the reveal.",
+-    detail:
+-      "The scan step flags openings as no-spray zones. The planner routes coverage up to the reveal line and hands tight edges and returns to servo-gun detailing, keeping glass and frames clean without manual masking of the field.",
+-    spec: SPEC_TALL,
++  CORRIDOR: {
++    reach: "Indexed, up to 4.6 m",
++    sprayWidth: "300–450 mm fan",
++    coverage: "Continuous long runs",
+   },
+-  {
+-    id: "sys-06",
+-    src: "/systems/system-06.png",
+-    surface: "Ceilings",
+-    title: "High-Bay Ceiling Reach",
+-    blurb:
+-      "Mast at full extension puts the spray head into a high ceiling from the floor, no lift required.",
+-    detail:
+-      "Full mast extension reaches high-bay ceilings that would otherwise need a scissor lift or scaffold. Reach is bounded by the design envelope; beyond it the job is split into planned base positions rather than pushing the arm out of tolerance.",
+-    spec: SPEC_CEILING,
++  ROOM: {
++    reach: "Full room envelope",
++    sprayWidth: "300–450 mm fan",
++    coverage: "Walls + ceiling / scan",
+   },
+-  {
+-    id: "sys-07",
+-    src: "/systems/system-07.png",
+-    surface: "Stairwells",
+-    title: "Stairwell Elevation",
+-    blurb:
+-      "Unit coats a tall stairwell wall, the arm reaching across the void from a level landing.",
+-    detail:
+-      "Stairwells are one of the slowest, most hazardous surfaces for a human crew. The unit sets up on a level landing and reaches across the elevation, holding standoff over the drop so the tall wall is coated without staging a scaffold in the shaft.",
+-    spec: SPEC_TALL,
++  DETAIL: {
++    reach: "0.9 m working arm",
++    sprayWidth: "120–250 mm fan",
++    coverage: "Servo-gun edge & reveal",
+   },
+-  {
+-    id: "sys-08",
+-    src: "/systems/system-08.png",
+-    surface: "Walls & Ceilings",
+-    title: "Room-Scale Autonomy",
+-    blurb:
+-      "Unit works an empty room end to end, sequencing walls and ceiling from one digital twin.",
+-    detail:
+-      "From a single site scan the unit sequences an entire room — walls then ceiling — as one coverage plan. It repositions its base between zones autonomously so a crew supervises prep and QA instead of moving equipment.",
+-    spec: SPEC_TALL,
++  TRANSIT: {
++    reach: "Autonomous navigation",
++    sprayWidth: "—",
++    coverage: "Zone-to-zone transit",
+   },
+-  {
+-    id: "sys-09",
+-    src: "/systems/system-09.png",
+-    surface: "Walls",
+-    title: "Consistent Film Build",
+-    blurb:
+-      "Close pass showing an even wet edge, the head holding constant speed and standoff.",
+-    detail:
+-      "Film consistency comes from holding three things constant: nozzle standoff, traverse speed, and flow. The closed-loop control target is ±2 mil across the field, which is the core quality thesis — a coat applied to spec instead of eyeballed.",
+-    spec: SPEC_TALL,
+-  },
+-  {
+-    id: "sys-10",
+-    src: "/systems/system-10.png",
+-    surface: "Detail",
+-    title: "Edge & Reveal Detailing",
+-    blurb:
+-      "Servo-gun narrows the fan for cut-lines, corners, and architectural reveals.",
+-    detail:
+-      "For edges the spray fan narrows and the servo gun trades throughput for precision. The unit cuts to reveal lines and works corners that the wide field pass deliberately stops short of, so the finished boundary is crisp.",
+-    spec: SPEC_DETAIL,
++  DOCK: {
++    reach: "Self-leveled base",
++    sprayWidth: "—",
++    coverage: "Standby between tasks",
+   },
++};
++
++// Longer technical explanation, keyed by category.
++const DETAIL_BY_CATEGORY: Record<SystemCategory, string> = {
++  WALL: "The mobile base holds a fixed standoff from the wall while the mast and arm sweep a continuous vertical pattern. Airless pressure and flow are held to the spray-path plan so a single pass builds an even film without banding or holidays.",
++  CEIL: "Ceiling work runs from a stable, self-leveled base with the arm elevated overhead. The path planner sequences parallel passes with controlled overlap and manages atomization so overspray and fallback onto the base are minimized.",
++  STAIR: "Stairwells are among the slowest, most hazardous surfaces for a human crew. The unit sets up on a level landing and reaches across the elevation, holding standoff over the drop so the tall wall is coated without staging a scaffold in the shaft.",
++  CORRIDOR: "For long runs the base advances in indexed steps between spray segments. Each new segment is registered against the last so seams line up and film thickness stays continuous down the length of the corridor.",
++  ROOM: "From a single site scan the unit sequences an entire room — walls then ceiling — as one coverage plan, repositioning its base between zones autonomously so a crew supervises prep and QA instead of moving equipment.",
++  DETAIL: "Up close, film consistency comes down to the end-effector: nozzle standoff, fan geometry, and regulated pressure. The servo gun trades throughput for precision on edges, reveals, and corners the wide field pass stops short of.",
++  TRANSIT: "Between work zones the unit drives itself — through thresholds and doorways, around obstacles — under its own navigation, so no operator is tied to repositioning it across the job.",
++  DOCK: "Between passes the unit self-levels and holds on standby, ready to resume the coverage plan. Idle time is where charging and multi-coat dry scheduling live.",
++};
++
++// Curated homepage set: the strongest FieldForge shots across a spread of
++// surfaces, in a deliberate order. IDs reference the shared catalog.
++const HOMEPAGE_IDS = [
++  "fieldforge-01",
++  "fieldforge-04",
++  "fieldforge-11",
++  "fieldforge-16",
++  "fieldforge-05",
++  "fieldforge-18",
++  "fieldforge-09",
++  "fieldforge-14",
++  "fieldforge-28",
++  "fieldforge-12",
++  "fieldforge-24",
++  "fieldforge-15",
++  "fieldforge-33",
++  "fieldforge-03",
+ ];
+ 
+-// A small colored badge for the operating surface.
+-function SurfaceBadge({ surface }: { surface: SystemView["surface"] }) {
++type Card = {
++  id: string;
++  src: string;
++  category: SystemCategory;
++  title: string;
++  blurb: string;
++  detail: string;
++  spec: SystemSpec;
++};
++
++function buildCards(): Card[] {
++  const byId = new Map(SYSTEM_IMAGES.map((s) => [s.id, s]));
++  const chosen = HOMEPAGE_IDS.map((id) => byId.get(id)).filter(
++    (s): s is (typeof SYSTEM_IMAGES)[number] => Boolean(s)
++  );
++  // Fallback: if any id is missing, backfill with the first FieldForge images.
++  if (chosen.length < HOMEPAGE_IDS.length) {
++    for (const s of SYSTEM_IMAGES) {
++      if (chosen.length >= HOMEPAGE_IDS.length) break;
++      if (s.line === "FieldForge" && !chosen.includes(s)) chosen.push(s);
++    }
++  }
++  return chosen.map((s) => ({
++    id: s.id,
++    src: s.src,
++    category: s.category,
++    title: CATEGORY_META[s.category].label,
++    blurb: s.caption,
++    detail: DETAIL_BY_CATEGORY[s.category],
++    spec: SPEC_BY_CATEGORY[s.category],
++  }));
++}
++
++function SurfaceBadge({ label }: { label: string }) {
+   return (
+     <span className="inline-flex items-center gap-1.5 rounded-full bg-[#0A2540]/85 px-3 py-1 text-[11px] font-semibold uppercase tracking-[1.5px] text-white backdrop-blur">
+       <span className="h-1.5 w-1.5 rounded-full bg-[#FF6B35]" />
+-      {surface}
++      {label}
+     </span>
+   );
+ }
+ 
+-// One spec cell used in the lightbox.
+ function SpecCell({
+   icon: Icon,
+   label,
+@@ -216,14 +183,14 @@ function SpecCell({
+ }
+ 
+ export function AutonomousSystems() {
++  const cards = useMemo(() => buildCards(), []);
+   const railRef = useRef<HTMLDivElement>(null);
+   const [openIndex, setOpenIndex] = useState<number | null>(null);
+   const [canLeft, setCanLeft] = useState(false);
+   const [canRight, setCanRight] = useState(true);
+ 
+-  const active = openIndex !== null ? SYSTEMS[openIndex] : null;
++  const active = openIndex !== null ? cards[openIndex] : null;
+ 
+-  // Update arrow affordances as the rail scrolls.
+   const updateArrows = useCallback(() => {
+     const el = railRef.current;
+     if (!el) return;
+@@ -251,17 +218,16 @@ export function AutonomousSystems() {
+     el.scrollBy({ left: dir * step, behavior: "smooth" });
+   }, []);
+ 
+-  // Lightbox: scroll lock + keyboard nav (Esc / ← / →).
+   useEffect(() => {
+     if (openIndex === null) return;
+     document.body.style.overflow = "hidden";
+     const onKey = (e: KeyboardEvent) => {
+       if (e.key === "Escape") setOpenIndex(null);
+       if (e.key === "ArrowRight")
+-        setOpenIndex((i) => (i === null ? i : (i + 1) % SYSTEMS.length));
++        setOpenIndex((i) => (i === null ? i : (i + 1) % cards.length));
+       if (e.key === "ArrowLeft")
+         setOpenIndex((i) =>
+-          i === null ? i : (i - 1 + SYSTEMS.length) % SYSTEMS.length
++          i === null ? i : (i - 1 + cards.length) % cards.length
+         );
+     };
+     window.addEventListener("keydown", onKey);
+@@ -269,24 +235,20 @@ export function AutonomousSystems() {
+       document.body.style.overflow = "";
+       window.removeEventListener("keydown", onKey);
+     };
+-  }, [openIndex]);
++  }, [openIndex, cards.length]);
+ 
+-  const similar =
+-    openIndex === null
+-      ? []
+-      : SYSTEMS.map((s, i) => ({ s, i }))
+-          .filter(({ i }) => i !== openIndex)
+-          .filter(
+-            ({ s }) => active !== null && s.surface === active.surface
+-          )
+-          .concat(
+-            // Backfill so there are always a few "Similar Views".
+-            SYSTEMS.map((s, i) => ({ s, i })).filter(
+-              ({ i, s }) =>
+-                i !== openIndex && active !== null && s.surface !== active.surface
+-            )
+-          )
+-          .slice(0, 5);
++  const similar = useMemo(() => {
++    if (openIndex === null || active === null) return [];
++    const same = cards
++      .map((c, i) => ({ c, i }))
++      .filter(({ i }) => i !== openIndex)
++      .filter(({ c }) => c.category === active.category);
++    const rest = cards
++      .map((c, i) => ({ c, i }))
++      .filter(({ i }) => i !== openIndex)
++      .filter(({ c }) => c.category !== active.category);
++    return [...same, ...rest].slice(0, 5);
++  }, [openIndex, active, cards]);
+ 
+   return (
+     <section
+@@ -294,7 +256,6 @@ export function AutonomousSystems() {
+       className="bg-[#F8FAFC] py-20 border-y border-[#E2E8F0]"
+     >
+       <div className="max-w-7xl mx-auto px-6">
+-        {/* Header — matches the site's left-aligned accent-rule pattern */}
+         <div className="section-header mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+           <div>
+             <div className="kicker mb-3">AUTONOMOUS PAINTING SYSTEMS</div>
+@@ -328,19 +289,26 @@ export function AutonomousSystems() {
+ 
+         <p className="mb-8 max-w-3xl text-[15px] leading-relaxed text-[#475569]">
+           A closer look at how a single PaintForge unit runs a job on its own —
+-          full-height walls, overhead ceilings, stairwells, and the tight edges
+-          in between. Swipe the rail, then open any view for the design-spec
+-          envelope and how that pass is executed.
++          full-height walls, overhead ceilings, corridors, stairwells, and the
++          tight edges in between. Swipe the rail and open any view for the
++          design-spec envelope and how that pass is executed. This is a curated
++          set;{" "}
++          <Link
++            href="/gallery"
++            className="font-semibold text-[#FF6B35] underline-offset-4 hover:underline"
++          >
++            the full 80-image systems gallery
++          </Link>{" "}
++          covers both product lines and every category.
+         </p>
+       </div>
+ 
+-      {/* Horizontal rail — full-bleed on mobile, scroll-snap, no layout shift */}
+       <div className="relative">
+         <div
+           ref={railRef}
+           className="flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth px-6 pb-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden lg:px-[max(1.5rem,calc((100vw-80rem)/2+1.5rem))]"
+         >
+-          {SYSTEMS.map((sys, i) => (
++          {cards.map((sys, i) => (
+             <button
+               key={sys.id}
+               data-card
+@@ -349,18 +317,17 @@ export function AutonomousSystems() {
+               className="card group relative w-[80vw] shrink-0 snap-start overflow-hidden p-0 text-left sm:w-[380px]"
+               aria-label={`Open ${sys.title}`}
+             >
+-              {/* Fixed 4:3 media box → zero layout shift while images decode */}
+               <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#0A2540]">
+                 <Image
+                   src={sys.src}
+-                  alt={`PaintForge unit — ${sys.title}`}
++                  alt={`PaintForge FieldForge unit — ${sys.title}`}
+                   fill
+                   sizes="(max-width: 640px) 80vw, 380px"
+                   className="object-cover object-top transition-transform duration-500 ease-out group-hover:scale-[1.06]"
+                 />
+                 <div className="absolute inset-0 bg-gradient-to-t from-[#0A2540]/70 via-transparent to-transparent" />
+                 <div className="absolute left-3 top-3">
+-                  <SurfaceBadge surface={sys.surface} />
++                  <SurfaceBadge label={sys.title} />
+                 </div>
+                 <div className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#0A2540] opacity-0 shadow-sm backdrop-blur transition-opacity duration-300 group-hover:opacity-100">
+                   <Maximize2 className="h-4 w-4" />
+@@ -381,10 +348,29 @@ export function AutonomousSystems() {
+               </div>
+             </button>
+           ))}
++
++          {/* Tail card → gallery */}
++          <Link
++            href="/gallery"
++            className="card group relative flex w-[80vw] shrink-0 snap-start flex-col items-center justify-center gap-3 bg-[#0A2540] p-8 text-center text-white sm:w-[380px]"
++            aria-label="Open the full systems gallery"
++          >
++            <LayoutGrid className="h-8 w-8 text-[#FF6B35]" />
++            <div className="text-xl font-semibold tracking-tight">
++              See all 80 systems
++            </div>
++            <p className="text-sm text-white/70">
++              Both product lines, every category — walls, ceilings, stairwells,
++              corridors, and detail.
++            </p>
++            <span className="learn-more mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-[#FF6B35]">
++              Open the gallery
++              <ArrowRight className="h-4 w-4 transition-transform" />
++            </span>
++          </Link>
+         </div>
+       </div>
+ 
+-      {/* Mobile arrows under the rail */}
+       <div className="mt-2 flex justify-center gap-2 sm:hidden">
+         <button
+           type="button"
+@@ -406,9 +392,7 @@ export function AutonomousSystems() {
+         </button>
+       </div>
+ 
+-      {/* ------------------------------------------------------------------ */}
+-      {/* LIGHTBOX                                                            */}
+-      {/* ------------------------------------------------------------------ */}
++      {/* LIGHTBOX */}
+       {active !== null && openIndex !== null && (
+         <div
+           className="fixed inset-0 z-[95] flex items-center justify-center p-3 sm:p-6"
+@@ -422,7 +406,6 @@ export function AutonomousSystems() {
+           />
+ 
+           <div className="relative flex max-h-[calc(100dvh-1.5rem)] w-full max-w-6xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl animate-dialog-in sm:max-h-[calc(100dvh-3rem)]">
+-            {/* Close */}
+             <button
+               onClick={() => setOpenIndex(null)}
+               aria-label="Close"
+@@ -431,11 +414,10 @@ export function AutonomousSystems() {
+               <X className="h-5 w-5" />
+             </button>
+ 
+-            {/* Prev / Next */}
+             <button
+               onClick={() =>
+                 setOpenIndex((i) =>
+-                  i === null ? i : (i - 1 + SYSTEMS.length) % SYSTEMS.length
++                  i === null ? i : (i - 1 + cards.length) % cards.length
+                 )
+               }
+               aria-label="Previous view"
+@@ -445,9 +427,7 @@ export function AutonomousSystems() {
+             </button>
+             <button
+               onClick={() =>
+-                setOpenIndex((i) =>
+-                  i === null ? i : (i + 1) % SYSTEMS.length
+-                )
++                setOpenIndex((i) => (i === null ? i : (i + 1) % cards.length))
+               }
+               aria-label="Next view"
+               className="absolute right-3 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-[#0A2540] shadow-md backdrop-blur transition hover:bg-white sm:flex"
+@@ -456,11 +436,10 @@ export function AutonomousSystems() {
+             </button>
+ 
+             <div className="grid flex-1 grid-cols-1 overflow-y-auto lg:grid-cols-[1.15fr_1fr]">
+-              {/* Large image */}
+               <div className="relative flex items-center justify-center bg-[#0A2540] p-4 lg:p-6">
+                 <Image
+                   src={active.src}
+-                  alt={`PaintForge unit — ${active.title}`}
++                  alt={`PaintForge FieldForge unit — ${active.title}`}
+                   width={784}
+                   height={1168}
+                   priority
+@@ -468,37 +447,32 @@ export function AutonomousSystems() {
+                   className="h-auto max-h-[42vh] w-auto rounded-xl object-contain shadow-lg lg:max-h-[76vh]"
+                 />
+                 <div className="absolute left-6 top-6">
+-                  <SurfaceBadge surface={active.surface} />
++                  <SurfaceBadge label={active.title} />
+                 </div>
+               </div>
+ 
+-              {/* Detail panel */}
+               <div className="flex flex-col gap-6 p-6 sm:p-8">
+                 <div>
+                   <div className="kicker mb-2">
+-                    INDEPENDENT OPERATION · VIEW{" "}
+-                    {String(openIndex + 1).padStart(2, "0")}/
+-                    {String(SYSTEMS.length).padStart(2, "0")}
++                    FIELDFORGE · {LINE_META.FieldForge.tagline.toUpperCase()} ·
++                    VIEW {String(openIndex + 1).padStart(2, "0")}/
++                    {String(cards.length).padStart(2, "0")}
+                   </div>
+                   <h3 className="text-2xl font-semibold tracking-tight text-[#0A2540] sm:text-3xl">
+                     {active.title}
+                   </h3>
++                  <p className="mt-2 text-sm text-[#475569]">{active.blurb}</p>
+                   <p className="mt-3 text-[15px] leading-relaxed text-[#475569]">
+                     {active.detail}
+                   </p>
+                 </div>
+ 
+-                {/* Precise measurements */}
+                 <div>
+                   <div className="mb-3 text-[11px] font-semibold uppercase tracking-[1.5px] text-[#64748B]">
+                     Design-spec envelope
+                   </div>
+                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+-                    <SpecCell
+-                      icon={Ruler}
+-                      label="Reach"
+-                      value={active.spec.reach}
+-                    />
++                    <SpecCell icon={Ruler} label="Reach" value={active.spec.reach} />
+                     <SpecCell
+                       icon={SprayCan}
+                       label="Spray width"
+@@ -517,33 +491,39 @@ export function AutonomousSystems() {
+                   </p>
+                 </div>
+ 
+-                {/* Similar Views */}
+                 <div className="mt-auto">
+                   <div className="mb-3 text-[11px] font-semibold uppercase tracking-[1.5px] text-[#64748B]">
+                     Similar views
+                   </div>
+                   <div className="flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+-                    {similar.map(({ s, i }) => (
++                    {similar.map(({ c, i }) => (
+                       <button
+-                        key={s.id}
++                        key={c.id}
+                         type="button"
+                         onClick={() => setOpenIndex(i)}
+-                        aria-label={`Open ${s.title}`}
++                        aria-label={`Open ${c.title}`}
+                         className="group relative h-20 w-28 shrink-0 overflow-hidden rounded-lg border border-[#E2E8F0] bg-[#0A2540] transition hover:border-[#FF6B35]"
+                       >
+                         <Image
+-                          src={s.src}
+-                          alt={s.title}
++                          src={c.src}
++                          alt={c.title}
+                           fill
+                           sizes="112px"
+                           className="object-cover object-top transition-transform duration-300 group-hover:scale-105"
+                         />
+                         <span className="absolute inset-x-0 bottom-0 truncate bg-[#0A2540]/80 px-1.5 py-1 text-[10px] font-medium text-white">
+-                          {s.title}
++                          {c.title}
+                         </span>
+                       </button>
+                     ))}
+                   </div>
++                  <Link
++                    href="/gallery"
++                    className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[#FF6B35] learn-more"
++                  >
++                    Browse all 80 systems
++                    <ArrowRight className="h-4 w-4 transition-transform" />
++                  </Link>
+                 </div>
+               </div>
+             </div>
+diff --git a/components/Navbar.tsx b/components/Navbar.tsx
+index f91e6a7..5cc3cf9 100644
+--- a/components/Navbar.tsx
++++ b/components/Navbar.tsx
+@@ -49,6 +49,7 @@ export function Navbar() {
+ 
+   const navLinks = [
+     { href: "/#features", label: "Platform" },
++    { href: "/gallery", label: "Gallery" },
+     { href: "/technology", label: "Technology" },
+     { href: "/solutions", label: "Solutions" },
+     { href: "/raas", label: "RaaS" },
+diff --git a/components/SystemsGallery.tsx b/components/SystemsGallery.tsx
+new file mode 100644
+index 0000000..79ba195
+--- /dev/null
++++ b/components/SystemsGallery.tsx
+@@ -0,0 +1,349 @@
++"use client";
++
++import React, { useCallback, useEffect, useMemo, useState } from "react";
++import Image from "next/image";
++import { X, ChevronLeft, ChevronRight } from "lucide-react";
++import {
++  SYSTEM_IMAGES,
++  CATEGORY_META,
++  CATEGORY_ORDER,
++  LINE_META,
++  type SystemImage,
++  type SystemLine,
++  type SystemCategory,
++} from "@/lib/systemsCatalog";
++
++// ---------------------------------------------------------------------------
++// SYSTEMS GALLERY — the full deduplicated 80-image library.
++//
++// Every unique render is exposed here, grouped by PRODUCT LINE (FieldForge /
++// StudioForge) and filterable by CATEGORY. Each tile carries a Ken Burns
++// motion loop (reusing the .kb / .kb-0..3 keyframes already in globals.css)
++// and its own caption. Clicking any tile opens the shared lightbox with
++// full image, line, category, and caption, plus keyboard navigation.
++// ---------------------------------------------------------------------------
++
++type LineFilter = SystemLine | "ALL";
++type CatFilter = SystemCategory | "ALL";
++
++const LINES: SystemLine[] = ["FieldForge", "StudioForge"];
++
++export function SystemsGallery() {
++  const [line, setLine] = useState<LineFilter>("ALL");
++  const [cat, setCat] = useState<CatFilter>("ALL");
++  const [openId, setOpenId] = useState<string | null>(null);
++
++  // Which categories actually exist for the active line (so we never show an
++  // empty filter chip).
++  const availableCats = useMemo(() => {
++    const pool =
++      line === "ALL"
++        ? SYSTEM_IMAGES
++        : SYSTEM_IMAGES.filter((s) => s.line === line);
++    const present = new Set(pool.map((s) => s.category));
++    return CATEGORY_ORDER.filter((c) => present.has(c));
++  }, [line]);
++
++  // If the selected category isn't valid for the active line, treat it as ALL
++  // during render (no effect / no setState-in-effect cascade).
++  const effectiveCat: CatFilter =
++    cat !== "ALL" && !availableCats.includes(cat) ? "ALL" : cat;
++
++  const filtered = useMemo(() => {
++    return SYSTEM_IMAGES.filter(
++      (s) =>
++        (line === "ALL" || s.line === line) &&
++        (effectiveCat === "ALL" || s.category === effectiveCat)
++    );
++  }, [line, effectiveCat]);
++
++  const openIndex = useMemo(
++    () => (openId === null ? -1 : filtered.findIndex((s) => s.id === openId)),
++    [openId, filtered]
++  );
++  const active = openIndex >= 0 ? filtered[openIndex] : null;
++
++  // Lightbox: scroll lock + keyboard nav.
++  useEffect(() => {
++    if (openId === null) return;
++    document.body.style.overflow = "hidden";
++    const onKey = (e: KeyboardEvent) => {
++      if (e.key === "Escape") setOpenId(null);
++      if (e.key === "ArrowRight")
++        setOpenId((id) => {
++          const i = filtered.findIndex((s) => s.id === id);
++          return i < 0 ? id : filtered[(i + 1) % filtered.length].id;
++        });
++      if (e.key === "ArrowLeft")
++        setOpenId((id) => {
++          const i = filtered.findIndex((s) => s.id === id);
++          return i < 0
++            ? id
++            : filtered[(i - 1 + filtered.length) % filtered.length].id;
++        });
++    };
++    window.addEventListener("keydown", onKey);
++    return () => {
++      document.body.style.overflow = "";
++      window.removeEventListener("keydown", onKey);
++    };
++  }, [openId, filtered]);
++
++  const step = useCallback(
++    (dir: 1 | -1) => {
++      setOpenId((id) => {
++        const i = filtered.findIndex((s) => s.id === id);
++        if (i < 0) return id;
++        return filtered[(i + dir + filtered.length) % filtered.length].id;
++      });
++    },
++    [filtered]
++  );
++
++  return (
++    <div>
++      {/* Controls */}
++      <div className="mb-8 flex flex-col gap-4">
++        {/* Line toggle */}
++        <div className="flex flex-wrap items-center gap-2">
++          <span className="mr-1 text-[11px] font-semibold uppercase tracking-[1.5px] text-[#64748B]">
++            Product line
++          </span>
++          <Chip active={line === "ALL"} onClick={() => setLine("ALL")}>
++            All lines
++          </Chip>
++          {LINES.map((l) => (
++            <Chip key={l} active={line === l} onClick={() => setLine(l)}>
++              {LINE_META[l].label}
++            </Chip>
++          ))}
++        </div>
++
++        {/* Category filter */}
++        <div className="flex flex-wrap items-center gap-2">
++          <span className="mr-1 text-[11px] font-semibold uppercase tracking-[1.5px] text-[#64748B]">
++            Surface
++          </span>
++          <Chip active={effectiveCat === "ALL"} onClick={() => setCat("ALL")}>
++            All surfaces
++          </Chip>
++          {availableCats.map((c) => (
++            <Chip
++              key={c}
++              active={effectiveCat === c}
++              onClick={() => setCat(c)}
++            >
++              {CATEGORY_META[c].label}
++            </Chip>
++          ))}
++        </div>
++
++        {/* Active line description + count */}
++        <p className="text-[15px] leading-relaxed text-[#475569]">
++          {line === "ALL" ? (
++            <>
++              Showing <strong>{filtered.length}</strong> systems across both
++              product lines.
++            </>
++          ) : (
++            <>
++              <strong>{LINE_META[line].label}</strong> —{" "}
++              {LINE_META[line].blurb} Showing{" "}
++              <strong>{filtered.length}</strong>.
++            </>
++          )}
++        </p>
++      </div>
++
++      {/* Masonry-style responsive grid, Ken Burns per tile */}
++      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
++        {filtered.map((s, i) => (
++          <GalleryTile
++            key={s.id}
++            image={s}
++            motion={i % 4}
++            onClick={() => setOpenId(s.id)}
++          />
++        ))}
++      </div>
++
++      {filtered.length === 0 && (
++        <div className="rounded-2xl border border-dashed border-[#E2E8F0] p-12 text-center text-[#64748B]">
++          No systems match that filter.
++        </div>
++      )}
++
++      {/* LIGHTBOX */}
++      {active && (
++        <div
++          className="fixed inset-0 z-[95] flex items-center justify-center p-3 sm:p-6"
++          role="dialog"
++          aria-modal="true"
++          aria-label={CATEGORY_META[active.category].label}
++        >
++          <div
++            className="absolute inset-0 bg-[#0A2540]/80 backdrop-blur-sm animate-backdrop-in"
++            onClick={() => setOpenId(null)}
++          />
++
++          <div className="relative flex max-h-[calc(100dvh-1.5rem)] w-full max-w-6xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl animate-dialog-in sm:max-h-[calc(100dvh-3rem)]">
++            <button
++              onClick={() => setOpenId(null)}
++              aria-label="Close"
++              className="absolute right-4 top-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-[#0A2540] shadow-md backdrop-blur transition hover:bg-white"
++            >
++              <X className="h-5 w-5" />
++            </button>
++            <button
++              onClick={() => step(-1)}
++              aria-label="Previous"
++              className="absolute left-3 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-[#0A2540] shadow-md backdrop-blur transition hover:bg-white sm:flex"
++            >
++              <ChevronLeft className="h-5 w-5" />
++            </button>
++            <button
++              onClick={() => step(1)}
++              aria-label="Next"
++              className="absolute right-3 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-[#0A2540] shadow-md backdrop-blur transition hover:bg-white sm:flex"
++            >
++              <ChevronRight className="h-5 w-5" />
++            </button>
++
++            <div className="grid flex-1 grid-cols-1 overflow-y-auto lg:grid-cols-[1.2fr_1fr]">
++              <div className="relative flex items-center justify-center bg-[#0A2540] p-4 lg:p-6">
++                <Image
++                  src={active.src}
++                  alt={`PaintForge ${active.line} — ${
++                    CATEGORY_META[active.category].label
++                  }`}
++                  width={784}
++                  height={1168}
++                  priority
++                  sizes="(max-width: 1024px) 90vw, 680px"
++                  className="h-auto max-h-[46vh] w-auto rounded-xl object-contain shadow-lg lg:max-h-[80vh]"
++                />
++                <span className="absolute left-6 top-6 inline-flex items-center gap-1.5 rounded-full bg-[#0A2540]/85 px-3 py-1 text-[11px] font-semibold uppercase tracking-[1.5px] text-white backdrop-blur">
++                  <span className="h-1.5 w-1.5 rounded-full bg-[#FF6B35]" />
++                  {active.line}
++                </span>
++              </div>
++
++              <div className="flex flex-col gap-5 p-6 sm:p-8">
++                <div>
++                  <div className="kicker mb-2">
++                    {active.line.toUpperCase()} ·{" "}
++                    {String(openIndex + 1).padStart(2, "0")}/
++                    {String(filtered.length).padStart(2, "0")}
++                  </div>
++                  <h3 className="text-2xl font-semibold tracking-tight text-[#0A2540] sm:text-3xl">
++                    {CATEGORY_META[active.category].label}
++                  </h3>
++                  <p className="mt-3 text-[15px] leading-relaxed text-[#475569]">
++                    {active.caption}
++                  </p>
++                  <p className="mt-2 text-sm leading-relaxed text-[#64748B]">
++                    {CATEGORY_META[active.category].blurb}
++                  </p>
++                </div>
++
++                <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
++                  <div className="mb-1 text-[11px] font-semibold uppercase tracking-[1.5px] text-[#64748B]">
++                    {LINE_META[active.line].tagline}
++                  </div>
++                  <p className="text-sm leading-relaxed text-[#475569]">
++                    {LINE_META[active.line].blurb}
++                  </p>
++                </div>
++
++                <p className="mt-auto text-xs leading-relaxed text-[#94A3B8]">
++                  Concept and pilot-development renders. Specifications and
++                  behaviors shown are engineering targets, not measured field
++                  results.
++                </p>
++              </div>
++            </div>
++          </div>
++        </div>
++      )}
++    </div>
++  );
++}
++
++function Chip({
++  active,
++  onClick,
++  children,
++}: {
++  active: boolean;
++  onClick: () => void;
++  children: React.ReactNode;
++}) {
++  return (
++    <button
++      type="button"
++      onClick={onClick}
++      className={
++        "rounded-full border px-4 py-1.5 text-sm font-medium transition " +
++        (active
++          ? "border-[#FF6B35] bg-[#FF6B35] text-white shadow-sm"
++          : "border-[#E2E8F0] bg-white text-[#475569] hover:border-[#CBD5E1] hover:-translate-y-0.5")
++      }
++    >
++      {children}
++    </button>
++  );
++}
++
++function GalleryTile({
++  image,
++  motion,
++  onClick,
++}: {
++  image: SystemImage;
++  motion: number;
++  onClick: () => void;
++}) {
++  return (
++    <button
++      type="button"
++      onClick={onClick}
++      className="card group relative aspect-[3/4] w-full overflow-hidden p-0 text-left"
++      aria-label={`Open ${CATEGORY_META[image.category].label}`}
++    >
++      <div className="absolute inset-0 overflow-hidden bg-[#0A2540]">
++        <Image
++          src={image.src}
++          alt={`PaintForge ${image.line} — ${
++            CATEGORY_META[image.category].label
++          }`}
++          fill
++          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
++          className={`kb kb-${motion} object-cover object-top`}
++          style={{
++            animationIterationCount: "infinite",
++            animationDirection: "alternate",
++            animationDuration: "14s",
++          }}
++        />
++      </div>
++
++      {/* Legibility gradient */}
++      <div className="absolute inset-0 bg-gradient-to-t from-[#0A2540]/85 via-[#0A2540]/10 to-transparent" />
++
++      {/* Line badge */}
++      <span className="absolute left-2.5 top-2.5 rounded-full bg-[#0A2540]/80 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[1px] text-white backdrop-blur">
++        {image.line}
++      </span>
++
++      {/* Caption */}
++      <div className="absolute inset-x-0 bottom-0 p-3">
++        <div className="mb-0.5 text-[10px] font-semibold uppercase tracking-[1.5px] text-[#FF8C5A]">
++          {CATEGORY_META[image.category].label}
++        </div>
++        <p className="text-[12px] font-medium leading-snug text-white line-clamp-2">
++          {image.caption}
++        </p>
++      </div>
++    </button>
++  );
++}
+diff --git a/lib/systemsCatalog.ts b/lib/systemsCatalog.ts
+new file mode 100644
+index 0000000..fe720f4
+--- /dev/null
++++ b/lib/systemsCatalog.ts
+@@ -0,0 +1,615 @@
++// AUTO-GENERATED catalog of the PaintForge systems image library.
++// 80 unique, deduplicated renders across two product lines and
++// eight functional categories. Edit captions here in one place.
++
++export type SystemLine = "FieldForge" | "StudioForge";
++export type SystemCategory =
++  | "WALL" | "CEIL" | "STAIR" | "CORRIDOR"
++  | "ROOM" | "DETAIL" | "TRANSIT" | "DOCK";
++
++export type SystemImage = {
++  id: string;
++  src: string;
++  line: SystemLine;
++  category: SystemCategory;
++  caption: string;
++};
++
++export const CATEGORY_META: Record<
++  SystemCategory,
++  { label: string; blurb: string }
++> = {
++  WALL: { label: "Wall Coating", blurb: "Full-height vertical surfaces sprayed to a uniform film." },
++  CEIL: { label: "Ceiling & Overhead", blurb: "Overhead passes with the arm elevated into the ceiling plane." },
++  STAIR: { label: "Stairwells", blurb: "Tall shaft walls reached from a level landing, no scaffold." },
++  CORRIDOR: { label: "Corridors & Long Runs", blurb: "Indexed segments down long, repeatable wall runs." },
++  ROOM: { label: "Room-Scale", blurb: "Whole-room sequencing from a single site scan." },
++  DETAIL: { label: "Spray-Head & Detail", blurb: "Servo-gun, nozzle, and pressure-control close-ups." },
++  TRANSIT: { label: "Autonomous Transit", blurb: "Self-driving between zones, thresholds, and doorways." },
++  DOCK: { label: "Dock & Standby", blurb: "Idle, self-leveled, or charging between tasks." },
++};
++
++export const LINE_META: Record<
++  SystemLine,
++  { label: string; tagline: string; blurb: string }
++> = {
++  FieldForge: {
++    label: "FieldForge",
++    tagline: "Autonomous field unit",
++    blurb:
++      "Our documented field line — captured working independently on real job-site walls, ceilings, corridors, and stairwells.",
++  },
++  StudioForge: {
++    label: "StudioForge",
++    tagline: "Commissioning & in-situ unit",
++    blurb:
++      "Our commissioning line — captured across staged and live finishing environments, from pressure-rig detail to full in-situ passes.",
++  },
++};
++
++export const SYSTEM_IMAGES: SystemImage[] = [
++  {
++    id: "studioforge-01",
++    src: "/gallery/studioforge-01.png",
++    line: "StudioForge",
++    category: "WALL",
++    caption: "Full-height wall coat — mast extended, holding a constant standoff for an even film.",
++  },
++  {
++    id: "studioforge-02",
++    src: "/gallery/studioforge-02.png",
++    line: "StudioForge",
++    category: "WALL",
++    caption: "Vertical wall pass building a uniform base coat without banding or holidays.",
++  },
++  {
++    id: "studioforge-03",
++    src: "/gallery/studioforge-03.png",
++    line: "StudioForge",
++    category: "DETAIL",
++    caption: "Spray-head close-up — servo gun, nozzle, and fan geometry.",
++  },
++  {
++    id: "studioforge-04",
++    src: "/gallery/studioforge-04.png",
++    line: "StudioForge",
++    category: "CEIL",
++    caption: "Overhead ceiling pass — arm raised into the ceiling plane from a self-leveled base.",
++  },
++  {
++    id: "studioforge-05",
++    src: "/gallery/studioforge-05.png",
++    line: "StudioForge",
++    category: "WALL",
++    caption: "Continuous wall sweep, airless pressure held to the spray-path plan.",
++  },
++  {
++    id: "studioforge-06",
++    src: "/gallery/studioforge-06.png",
++    line: "StudioForge",
++    category: "ROOM",
++    caption: "Room-scale autonomy — walls and ceiling sequenced from one site scan.",
++  },
++  {
++    id: "studioforge-07",
++    src: "/gallery/studioforge-07.png",
++    line: "StudioForge",
++    category: "DETAIL",
++    caption: "Pressure-control detail: gauge, regulator, and airless feed.",
++  },
++  {
++    id: "studioforge-08",
++    src: "/gallery/studioforge-08.png",
++    line: "StudioForge",
++    category: "TRANSIT",
++    caption: "Autonomous transit — self-driving between zones through a doorway.",
++  },
++  {
++    id: "studioforge-09",
++    src: "/gallery/studioforge-09.png",
++    line: "StudioForge",
++    category: "WALL",
++    caption: "Wall section coated edge-to-edge in a single registered pass.",
++  },
++  {
++    id: "studioforge-10",
++    src: "/gallery/studioforge-10.png",
++    line: "StudioForge",
++    category: "ROOM",
++    caption: "Whole-room coverage plan executed end to end.",
++  },
++  {
++    id: "studioforge-11",
++    src: "/gallery/studioforge-11.png",
++    line: "StudioForge",
++    category: "WALL",
++    caption: "Large-field wall spraying with the arm tracking a planned coverage path.",
++  },
++  {
++    id: "studioforge-12",
++    src: "/gallery/studioforge-12.png",
++    line: "StudioForge",
++    category: "CEIL",
++    caption: "Ceiling coating with controlled overlap and managed atomization overhead.",
++  },
++  {
++    id: "studioforge-13",
++    src: "/gallery/studioforge-13.png",
++    line: "StudioForge",
++    category: "DETAIL",
++    caption: "Nozzle and cup detail during a controlled test pass.",
++  },
++  {
++    id: "studioforge-14",
++    src: "/gallery/studioforge-14.png",
++    line: "StudioForge",
++    category: "WALL",
++    caption: "Full-height wall coat — mast extended, holding a constant standoff for an even film.",
++  },
++  {
++    id: "studioforge-15",
++    src: "/gallery/studioforge-15.png",
++    line: "StudioForge",
++    category: "WALL",
++    caption: "Vertical wall pass building a uniform base coat without banding or holidays.",
++  },
++  {
++    id: "studioforge-16",
++    src: "/gallery/studioforge-16.png",
++    line: "StudioForge",
++    category: "CORRIDOR",
++    caption: "Long corridor run coated in indexed, repeatable segments.",
++  },
++  {
++    id: "studioforge-17",
++    src: "/gallery/studioforge-17.png",
++    line: "StudioForge",
++    category: "DETAIL",
++    caption: "End-effector close-up showing the atomizing spray tip.",
++  },
++  {
++    id: "studioforge-18",
++    src: "/gallery/studioforge-18.png",
++    line: "StudioForge",
++    category: "TRANSIT",
++    caption: "Repositioning across a threshold under its own navigation.",
++  },
++  {
++    id: "studioforge-19",
++    src: "/gallery/studioforge-19.png",
++    line: "StudioForge",
++    category: "WALL",
++    caption: "Continuous wall sweep, airless pressure held to the spray-path plan.",
++  },
++  {
++    id: "studioforge-20",
++    src: "/gallery/studioforge-20.png",
++    line: "StudioForge",
++    category: "ROOM",
++    caption: "Empty room worked as a single digital-twin coverage sequence.",
++  },
++  {
++    id: "studioforge-21",
++    src: "/gallery/studioforge-21.png",
++    line: "StudioForge",
++    category: "WALL",
++    caption: "Wall section coated edge-to-edge in a single registered pass.",
++  },
++  {
++    id: "studioforge-22",
++    src: "/gallery/studioforge-22.png",
++    line: "StudioForge",
++    category: "WALL",
++    caption: "Large-field wall spraying with the arm tracking a planned coverage path.",
++  },
++  {
++    id: "studioforge-23",
++    src: "/gallery/studioforge-23.png",
++    line: "StudioForge",
++    category: "DETAIL",
++    caption: "Spray-head close-up — servo gun, nozzle, and fan geometry.",
++  },
++  {
++    id: "studioforge-24",
++    src: "/gallery/studioforge-24.png",
++    line: "StudioForge",
++    category: "WALL",
++    caption: "Full-height wall coat — mast extended, holding a constant standoff for an even film.",
++  },
++  {
++    id: "studioforge-25",
++    src: "/gallery/studioforge-25.png",
++    line: "StudioForge",
++    category: "WALL",
++    caption: "Vertical wall pass building a uniform base coat without banding or holidays.",
++  },
++  {
++    id: "studioforge-26",
++    src: "/gallery/studioforge-26.png",
++    line: "StudioForge",
++    category: "WALL",
++    caption: "Continuous wall sweep, airless pressure held to the spray-path plan.",
++  },
++  {
++    id: "studioforge-27",
++    src: "/gallery/studioforge-27.png",
++    line: "StudioForge",
++    category: "WALL",
++    caption: "Wall section coated edge-to-edge in a single registered pass.",
++  },
++  {
++    id: "studioforge-28",
++    src: "/gallery/studioforge-28.png",
++    line: "StudioForge",
++    category: "TRANSIT",
++    caption: "Driving to the next work zone without an operator at the controls.",
++  },
++  {
++    id: "studioforge-29",
++    src: "/gallery/studioforge-29.png",
++    line: "StudioForge",
++    category: "WALL",
++    caption: "Large-field wall spraying with the arm tracking a planned coverage path.",
++  },
++  {
++    id: "studioforge-30",
++    src: "/gallery/studioforge-30.png",
++    line: "StudioForge",
++    category: "DETAIL",
++    caption: "Pressure-control detail: gauge, regulator, and airless feed.",
++  },
++  {
++    id: "studioforge-31",
++    src: "/gallery/studioforge-31.png",
++    line: "StudioForge",
++    category: "WALL",
++    caption: "Full-height wall coat — mast extended, holding a constant standoff for an even film.",
++  },
++  {
++    id: "studioforge-32",
++    src: "/gallery/studioforge-32.png",
++    line: "StudioForge",
++    category: "WALL",
++    caption: "Vertical wall pass building a uniform base coat without banding or holidays.",
++  },
++  {
++    id: "studioforge-33",
++    src: "/gallery/studioforge-33.png",
++    line: "StudioForge",
++    category: "DETAIL",
++    caption: "Nozzle and cup detail during a controlled test pass.",
++  },
++  {
++    id: "studioforge-34",
++    src: "/gallery/studioforge-34.png",
++    line: "StudioForge",
++    category: "DOCK",
++    caption: "On standby — self-leveled and idle between tasks.",
++  },
++  {
++    id: "studioforge-35",
++    src: "/gallery/studioforge-35.png",
++    line: "StudioForge",
++    category: "WALL",
++    caption: "Continuous wall sweep, airless pressure held to the spray-path plan.",
++  },
++  {
++    id: "studioforge-36",
++    src: "/gallery/studioforge-36.png",
++    line: "StudioForge",
++    category: "ROOM",
++    caption: "Room-scale autonomy — walls and ceiling sequenced from one site scan.",
++  },
++  {
++    id: "studioforge-37",
++    src: "/gallery/studioforge-37.png",
++    line: "StudioForge",
++    category: "DETAIL",
++    caption: "End-effector close-up showing the atomizing spray tip.",
++  },
++  {
++    id: "studioforge-38",
++    src: "/gallery/studioforge-38.png",
++    line: "StudioForge",
++    category: "TRANSIT",
++    caption: "Autonomous transit — self-driving between zones through a doorway.",
++  },
++  {
++    id: "studioforge-39",
++    src: "/gallery/studioforge-39.png",
++    line: "StudioForge",
++    category: "WALL",
++    caption: "Wall section coated edge-to-edge in a single registered pass.",
++  },
++  {
++    id: "studioforge-40",
++    src: "/gallery/studioforge-40.png",
++    line: "StudioForge",
++    category: "ROOM",
++    caption: "Whole-room coverage plan executed end to end.",
++  },
++  {
++    id: "fieldforge-01",
++    src: "/gallery/fieldforge-01.png",
++    line: "FieldForge",
++    category: "WALL",
++    caption: "Large-field wall spraying with the arm tracking a planned coverage path.",
++  },
++  {
++    id: "fieldforge-02",
++    src: "/gallery/fieldforge-02.png",
++    line: "FieldForge",
++    category: "WALL",
++    caption: "Full-height wall coat — mast extended, holding a constant standoff for an even film.",
++  },
++  {
++    id: "fieldforge-03",
++    src: "/gallery/fieldforge-03.png",
++    line: "FieldForge",
++    category: "DETAIL",
++    caption: "Spray-head close-up — servo gun, nozzle, and fan geometry.",
++  },
++  {
++    id: "fieldforge-04",
++    src: "/gallery/fieldforge-04.png",
++    line: "FieldForge",
++    category: "CEIL",
++    caption: "High-reach ceiling work from the floor, no lift or scaffold staged.",
++  },
++  {
++    id: "fieldforge-05",
++    src: "/gallery/fieldforge-05.png",
++    line: "FieldForge",
++    category: "CEIL",
++    caption: "Overhead ceiling pass — arm raised into the ceiling plane from a self-leveled base.",
++  },
++  {
++    id: "fieldforge-06",
++    src: "/gallery/fieldforge-06.png",
++    line: "FieldForge",
++    category: "WALL",
++    caption: "Vertical wall pass building a uniform base coat without banding or holidays.",
++  },
++  {
++    id: "fieldforge-07",
++    src: "/gallery/fieldforge-07.png",
++    line: "FieldForge",
++    category: "WALL",
++    caption: "Continuous wall sweep, airless pressure held to the spray-path plan.",
++  },
++  {
++    id: "fieldforge-08",
++    src: "/gallery/fieldforge-08.png",
++    line: "FieldForge",
++    category: "TRANSIT",
++    caption: "Repositioning across a threshold under its own navigation.",
++  },
++  {
++    id: "fieldforge-09",
++    src: "/gallery/fieldforge-09.png",
++    line: "FieldForge",
++    category: "WALL",
++    caption: "Wall section coated edge-to-edge in a single registered pass.",
++  },
++  {
++    id: "fieldforge-10",
++    src: "/gallery/fieldforge-10.png",
++    line: "FieldForge",
++    category: "TRANSIT",
++    caption: "Driving to the next work zone without an operator at the controls.",
++  },
++  {
++    id: "fieldforge-11",
++    src: "/gallery/fieldforge-11.png",
++    line: "FieldForge",
++    category: "CORRIDOR",
++    caption: "Corridor wall sprayed segment-by-segment with seams registered to match.",
++  },
++  {
++    id: "fieldforge-12",
++    src: "/gallery/fieldforge-12.png",
++    line: "FieldForge",
++    category: "WALL",
++    caption: "Large-field wall spraying with the arm tracking a planned coverage path.",
++  },
++  {
++    id: "fieldforge-13",
++    src: "/gallery/fieldforge-13.png",
++    line: "FieldForge",
++    category: "DETAIL",
++    caption: "Pressure-control detail: gauge, regulator, and airless feed.",
++  },
++  {
++    id: "fieldforge-14",
++    src: "/gallery/fieldforge-14.png",
++    line: "FieldForge",
++    category: "CEIL",
++    caption: "Ceiling coating with controlled overlap and managed atomization overhead.",
++  },
++  {
++    id: "fieldforge-15",
++    src: "/gallery/fieldforge-15.png",
++    line: "FieldForge",
++    category: "CEIL",
++    caption: "High-reach ceiling work from the floor, no lift or scaffold staged.",
++  },
++  {
++    id: "fieldforge-16",
++    src: "/gallery/fieldforge-16.png",
++    line: "FieldForge",
++    category: "CORRIDOR",
++    caption: "Self-positioning down a corridor, keeping film thickness continuous.",
++  },
++  {
++    id: "fieldforge-17",
++    src: "/gallery/fieldforge-17.png",
++    line: "FieldForge",
++    category: "WALL",
++    caption: "Full-height wall coat — mast extended, holding a constant standoff for an even film.",
++  },
++  {
++    id: "fieldforge-18",
++    src: "/gallery/fieldforge-18.png",
++    line: "FieldForge",
++    category: "CORRIDOR",
++    caption: "Long corridor run coated in indexed, repeatable segments.",
++  },
++  {
++    id: "fieldforge-19",
++    src: "/gallery/fieldforge-19.png",
++    line: "FieldForge",
++    category: "WALL",
++    caption: "Vertical wall pass building a uniform base coat without banding or holidays.",
++  },
++  {
++    id: "fieldforge-20",
++    src: "/gallery/fieldforge-20.png",
++    line: "FieldForge",
++    category: "TRANSIT",
++    caption: "Autonomous transit — self-driving between zones through a doorway.",
++  },
++  {
++    id: "fieldforge-21",
++    src: "/gallery/fieldforge-21.png",
++    line: "FieldForge",
++    category: "WALL",
++    caption: "Continuous wall sweep, airless pressure held to the spray-path plan.",
++  },
++  {
++    id: "fieldforge-22",
++    src: "/gallery/fieldforge-22.png",
++    line: "FieldForge",
++    category: "CEIL",
++    caption: "Overhead ceiling pass — arm raised into the ceiling plane from a self-leveled base.",
++  },
++  {
++    id: "fieldforge-23",
++    src: "/gallery/fieldforge-23.png",
++    line: "FieldForge",
++    category: "DETAIL",
++    caption: "Nozzle and cup detail during a controlled test pass.",
++  },
++  {
++    id: "fieldforge-24",
++    src: "/gallery/fieldforge-24.png",
++    line: "FieldForge",
++    category: "TRANSIT",
++    caption: "Repositioning across a threshold under its own navigation.",
++  },
++  {
++    id: "fieldforge-25",
++    src: "/gallery/fieldforge-25.png",
++    line: "FieldForge",
++    category: "WALL",
++    caption: "Wall section coated edge-to-edge in a single registered pass.",
++  },
++  {
++    id: "fieldforge-26",
++    src: "/gallery/fieldforge-26.png",
++    line: "FieldForge",
++    category: "WALL",
++    caption: "Large-field wall spraying with the arm tracking a planned coverage path.",
++  },
++  {
++    id: "fieldforge-27",
++    src: "/gallery/fieldforge-27.png",
++    line: "FieldForge",
++    category: "WALL",
++    caption: "Full-height wall coat — mast extended, holding a constant standoff for an even film.",
++  },
++  {
++    id: "fieldforge-28",
++    src: "/gallery/fieldforge-28.png",
++    line: "FieldForge",
++    category: "CORRIDOR",
++    caption: "Corridor wall sprayed segment-by-segment with seams registered to match.",
++  },
++  {
++    id: "fieldforge-29",
++    src: "/gallery/fieldforge-29.png",
++    line: "FieldForge",
++    category: "WALL",
++    caption: "Vertical wall pass building a uniform base coat without banding or holidays.",
++  },
++  {
++    id: "fieldforge-30",
++    src: "/gallery/fieldforge-30.png",
++    line: "FieldForge",
++    category: "DOCK",
++    caption: "Docked between passes, ready to resume the coverage plan.",
++  },
++  {
++    id: "fieldforge-31",
++    src: "/gallery/fieldforge-31.png",
++    line: "FieldForge",
++    category: "CORRIDOR",
++    caption: "Self-positioning down a corridor, keeping film thickness continuous.",
++  },
++  {
++    id: "fieldforge-32",
++    src: "/gallery/fieldforge-32.png",
++    line: "FieldForge",
++    category: "WALL",
++    caption: "Continuous wall sweep, airless pressure held to the spray-path plan.",
++  },
++  {
++    id: "fieldforge-33",
++    src: "/gallery/fieldforge-33.png",
++    line: "FieldForge",
++    category: "DETAIL",
++    caption: "End-effector close-up showing the atomizing spray tip.",
++  },
++  {
++    id: "fieldforge-34",
++    src: "/gallery/fieldforge-34.png",
++    line: "FieldForge",
++    category: "WALL",
++    caption: "Wall section coated edge-to-edge in a single registered pass.",
++  },
++  {
++    id: "fieldforge-35",
++    src: "/gallery/fieldforge-35.png",
++    line: "FieldForge",
++    category: "WALL",
++    caption: "Large-field wall spraying with the arm tracking a planned coverage path.",
++  },
++  {
++    id: "fieldforge-36",
++    src: "/gallery/fieldforge-36.png",
++    line: "FieldForge",
++    category: "ROOM",
++    caption: "Empty room worked as a single digital-twin coverage sequence.",
++  },
++  {
++    id: "fieldforge-37",
++    src: "/gallery/fieldforge-37.png",
++    line: "FieldForge",
++    category: "CEIL",
++    caption: "Ceiling coating with controlled overlap and managed atomization overhead.",
++  },
++  {
++    id: "fieldforge-38",
++    src: "/gallery/fieldforge-38.png",
++    line: "FieldForge",
++    category: "CORRIDOR",
++    caption: "Long corridor run coated in indexed, repeatable segments.",
++  },
++  {
++    id: "fieldforge-39",
++    src: "/gallery/fieldforge-39.png",
++    line: "FieldForge",
++    category: "WALL",
++    caption: "Full-height wall coat — mast extended, holding a constant standoff for an even film.",
++  },
++  {
++    id: "fieldforge-40",
++    src: "/gallery/fieldforge-40.png",
++    line: "FieldForge",
++    category: "WALL",
++    caption: "Vertical wall pass building a uniform base coat without banding or holidays.",
++  },
++];
++
++export const CATEGORY_ORDER: SystemCategory[] = [
++  "WALL", "CEIL", "CORRIDOR", "ROOM", "STAIR", "DETAIL", "TRANSIT", "DOCK",
++];
